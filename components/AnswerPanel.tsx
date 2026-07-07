@@ -1,10 +1,11 @@
 import ReactMarkdown from "react-markdown";
 import type { SearchResponse } from "../lib/types";
+import { EvidenceCard } from "./EvidenceCard";
 
 export function AnswerPanel({ result }: { result: SearchResponse }) {
   return (
-    <div className="rounded-lg border border-line bg-panel p-5 shadow-glow">
-      <div className="mb-3 text-xs uppercase tracking-wide text-neutral-400">{result.intent}</div>
+    <div className="rounded-lg border border-[rgba(55,50,47,0.12)] bg-white p-5 shadow-[0_1px_2px_rgba(55,50,47,0.05)]">
+      <div className="mb-3 text-xs uppercase tracking-wide text-[#827C77]">{result.intent}</div>
       <div className="text-base leading-7 text-ink">
         <ReactMarkdown
           components={{
@@ -24,6 +25,16 @@ export function AnswerPanel({ result }: { result: SearchResponse }) {
           {result.answer}
         </ReactMarkdown>
       </div>
+      {result.evidenceCards.length ? (
+        <div className="mt-5 border-t border-[rgba(55,50,47,0.08)] pt-4">
+          <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#827C77]">Citations</div>
+          <div className="grid gap-3">
+            {result.evidenceCards.slice(0, 4).map((card) => (
+              <EvidenceCard key={card.id} card={card} />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

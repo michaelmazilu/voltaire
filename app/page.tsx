@@ -1,19 +1,10 @@
 "use client";
 
-import { ArrowRight, Plus, Send } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { FloralCorner, FloralDivider } from "../components/FloralAccents";
 import { VoltaireMark } from "../components/VoltaireMark";
 
 export default function Home() {
-  const [query, setQuery] = useState("");
-
-  function openChat() {
-    const trimmedQuery = query.trim();
-    if (!trimmedQuery) return;
-    window.location.href = `/chat?q=${encodeURIComponent(trimmedQuery)}`;
-  }
-
   return (
     <main className="min-h-screen bg-[#F7F5F3] text-[#37322F]">
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1060px] flex-col border-x border-[rgba(55,50,47,0.12)] shadow-[1px_0_0_white,-1px_0_0_white]">
@@ -65,51 +56,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        <section className="px-4 py-12 sm:px-8">
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              openChat();
-            }}
-            className="relative mx-auto max-w-[760px]"
-          >
-            <div
-              className="relative z-10 flex min-h-16 items-end gap-3 rounded-[30px] bg-white p-2 shadow-[0_0_0_1px_rgba(55,50,47,0.12),0_18px_60px_rgba(55,50,47,0.12)] focus-within:shadow-[0_0_0_1px_rgba(55,50,47,0.28),0_18px_60px_rgba(55,50,47,0.12)]"
-            >
-              <button
-                type="button"
-                className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#605A57] transition hover:bg-[#F0EEEC]"
-                aria-label="Attach source"
-              >
-                <Plus className="h-5 w-5" aria-hidden />
-              </button>
-              <textarea
-                className="max-h-36 min-h-12 flex-1 resize-none bg-transparent py-3 text-base font-medium leading-6 text-[#37322F] outline-none placeholder:text-[#9B948E]"
-                placeholder="Ask anything"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    openChat();
-                  }
-                }}
-                aria-label="Ask Voltaire"
-                rows={1}
-              />
-              <button
-                type="submit"
-                className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#37322F] text-white transition hover:bg-[#2A2520] disabled:cursor-not-allowed disabled:opacity-45"
-                disabled={!query.trim()}
-                aria-label="Open chat"
-              >
-                <Send className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
-          </form>
-        </section>
-
       </div>
     </main>
   );
