@@ -63,3 +63,12 @@ export async function callMcpTool(name: string, args: any) {
   return JSON.parse(json.result.content[0].text);
 }
 
+export async function insertButterbaseRows(table: string, rows: Record<string, unknown>[]) {
+  const appId = process.env.NEXT_PUBLIC_BUTTERBASE_APP_ID;
+  if (!appId || !hasButterbaseAdminKey() || !rows.length) {
+    return { inserted: 0, configured: Boolean(appId && hasButterbaseAdminKey()) };
+  }
+
+  await callMcpTool("insert_rows", { app_id: appId, table, rows });
+  return { inserted: rows.length, configured: true };
+}

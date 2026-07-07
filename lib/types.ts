@@ -76,6 +76,10 @@ export type RouteResult = {
   methods: string[];
 };
 
+export type ToolPlan = RouteResult & {
+  needsRetrieval: boolean;
+};
+
 export type EvidenceCard = {
   id: string;
   source: Source;

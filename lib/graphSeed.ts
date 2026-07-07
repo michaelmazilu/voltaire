@@ -8,7 +8,7 @@ export async function seedGraph() {
   const database = process.env.NEO4J_DATABASE;
   const session = driver.session(database ? { database } : undefined);
   try {
-    await session.executeWrite((tx) =>
+    await session.executeWrite((tx: any) =>
       tx.run(
         `
         MERGE (m:Person {name: "Michael"})
@@ -43,7 +43,7 @@ export async function seedGraph() {
       ),
     );
     for (const flight of flightResults()) {
-      await session.executeWrite((tx) =>
+      await session.executeWrite((tx: any) =>
         tx.run(
           `
           MATCH (topic:Topic {name: "Toronto to San Francisco cheap flight"})

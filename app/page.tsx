@@ -1,24 +1,23 @@
 "use client";
 
+import { ArrowRight, Database, KeyRound, Network, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { AnswerPanel } from "../components/AnswerPanel";
 import { SearchBar } from "../components/SearchBar";
-import { SourceCard } from "../components/SourceCard";
+import { VoltaireMark } from "../components/VoltaireMark";
 import type { SearchResponse } from "../lib/types";
 
 const examples = [
-  "Find my cheapest flight options",
   "Search my personal messages",
   "Summarize what my manager asked me to do",
-  "What should I do next based on my sources?",
+  "Find my cheapest flight options",
 ];
 
 const sources = [
-  ["Instagram", "not connected"],
-  ["Google Meet", "not connected"],
-  ["Exa web", "optional"],
-  ["Butterbase", "local adapter"],
-  ["Neo4j graph", "not seeded"],
+  ["Butterbase", "data + RAG"],
+  ["Neo4j", "relationship graph"],
+  ["Exa", "web context"],
+  ["LLM", "planner + evaluator"],
 ];
 
 export default function Home() {
@@ -40,50 +39,169 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen px-5 py-8 text-ink sm:px-8">
-      <div className="mx-auto max-w-7xl">
-        <section className="grid gap-8 border-b border-line py-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
-          <div>
-            <div className="mb-4 inline-flex rounded border border-line bg-white px-3 py-1 text-xs uppercase tracking-wide text-neutral-500">Universal memory search</div>
-            <h1 className="text-5xl font-bold tracking-normal text-ink sm:text-7xl">Voltaire</h1>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-neutral-500">AI agents that find anything you have interacted with.</p>
-            <div className="mt-5 max-w-2xl rounded-lg border border-line bg-white p-4 text-sm leading-6 text-neutral-500">
-              No seed data is bundled. Voltaire only returns evidence from connected tools or real data sources you add.
+    <main className="min-h-screen bg-[#F7F5F3] text-[#37322F]">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1060px] flex-col border-x border-[rgba(55,50,47,0.12)] shadow-[1px_0_0_white,-1px_0_0_white]">
+        <header className="absolute left-0 top-0 z-20 flex h-[84px] w-full items-center justify-center px-6">
+          <div className="absolute left-0 top-[42px] h-px w-full border-t border-[rgba(55,50,47,0.12)] shadow-[0_1px_0_white]" />
+          <nav className="relative z-10 flex h-12 w-full max-w-[760px] items-center justify-between rounded-full bg-[#F7F5F3] px-4 py-2 shadow-[0_0_0_2px_white]">
+            <a href="/" className="flex items-center gap-2">
+              <VoltaireMark className="h-6 w-6 text-[#37322F]" />
+              <span className="font-serif text-xl italic leading-none text-[#2F3037]">Voltaire</span>
+            </a>
+            <div className="hidden items-center gap-5 text-[13px] font-medium text-[rgba(49,45,43,0.78)] sm:flex">
+              <a href="#product">Product</a>
+              <a href="#sources">Sources</a>
+              <a href="#search">Try it</a>
+            </div>
+            <a
+              href="/setup"
+              className="rounded-full bg-[#37322F] px-4 py-2 text-[13px] font-medium leading-none text-white shadow-[0_1px_2px_rgba(55,50,47,0.12)] transition hover:bg-[#2A2520]"
+            >
+              Connect
+            </a>
+          </nav>
+        </header>
+
+        <section className="relative flex flex-col items-center overflow-hidden border-b border-[rgba(55,50,47,0.08)] px-4 pb-12 pt-[164px]">
+          <div className="pointer-events-none absolute left-1/2 top-[310px] h-[520px] w-[1400px] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(circle,rgba(55,50,47,0.10),transparent_60%)] opacity-70" />
+          <div className="relative z-10 flex max-w-[940px] flex-col items-center gap-6 text-center">
+            <div className="rounded-full border border-[rgba(55,50,47,0.12)] bg-white px-[14px] py-[6px] text-xs font-medium text-[#37322F] shadow-[0_0_0_4px_rgba(55,50,47,0.05)]">
+              Universal AI search for your digital life
+            </div>
+            <h1 className="max-w-[790px] font-serif text-[42px] font-normal leading-[1.05] tracking-[-0.02em] text-[#37322F] sm:text-[68px] lg:text-[84px]">
+              Find anything you have interacted with.
+            </h1>
+            <p className="max-w-[600px] text-base font-medium leading-7 text-[rgba(55,50,47,0.78)] sm:text-lg">
+              Voltaire plans the right tools, retrieves evidence from connected sources, traverses relationships, and returns cited answers without bundled seed data.
+            </p>
+            <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
+              <a
+                href="#search"
+                className="flex h-12 items-center gap-2 rounded-full bg-[#37322F] px-9 text-sm font-medium text-white shadow-[0_0_0_2.5px_rgba(255,255,255,0.08)_inset] transition hover:bg-[#2A2520]"
+              >
+                Ask Voltaire <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href="/setup"
+                className="flex h-12 items-center rounded-full border border-[rgba(55,50,47,0.15)] bg-white px-9 text-sm font-medium text-[#37322F] transition hover:bg-[#F0EEEC]"
+              >
+                Configure sources
+              </a>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2">
-            {sources.map(([name, status]) => <SourceCard key={name} name={name} status={status} />)}
+
+          <div id="product" className="relative z-10 mt-16 w-full max-w-[960px] rounded-[9px] bg-[#37322F] p-3 shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
+            <div className="rounded-[7px] border border-white/10 bg-gradient-to-br from-[#37322F] via-[#48433F] to-[#2F2A27] p-5 text-white">
+              <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
+                <aside className="rounded-md border border-white/10 bg-white/8 p-4">
+                  <div className="mb-4 text-xs uppercase tracking-wide text-white/50">Tool plan</div>
+                  {[
+                    ["Planner", "choose intent"],
+                    ["Butterbase", "structured + RAG"],
+                    ["Neo4j", "relationship trace"],
+                    ["Evaluator", "answer with citations"],
+                  ].map(([name, detail]) => (
+                    <div key={name} className="mb-3 flex items-center justify-between rounded-md bg-white/8 px-3 py-2 text-sm">
+                      <span>{name}</span>
+                      <span className="text-white/45">{detail}</span>
+                    </div>
+                  ))}
+                </aside>
+                <div className="rounded-md border border-white/10 bg-[#F7F5F3] p-4 text-[#37322F]">
+                  <div className="mb-4 flex items-center justify-between border-b border-[#e0dedb] pb-3">
+                    <div>
+                      <div className="text-sm font-semibold">Answer workspace</div>
+                      <div className="text-xs font-medium text-[#827C77]">No evidence appears until a real source returns it.</div>
+                    </div>
+                    <div className="rounded-full bg-[#37322F] px-3 py-1 text-xs text-white">live pipeline</div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {[
+                      [Search, "Ask", "Natural language query"],
+                      [Database, "Retrieve", "Butterbase + RAG"],
+                      [Network, "Prove", "Neo4j graph trace"],
+                    ].map(([Icon, title, detail]) => (
+                      <div key={String(title)} className="rounded-md border border-[#e0dedb] bg-white p-4">
+                        <Icon className="mb-8 h-5 w-5 text-[#37322F]" />
+                        <div className="text-sm font-semibold">{String(title)}</div>
+                        <div className="mt-1 text-xs font-medium text-[#827C77]">{String(detail)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="space-y-4">
-          <SearchBar onSearch={runSearch} loading={loading} />
-          <div className="flex flex-wrap gap-2">
-            {examples.map((example) => (
-              <button
-                key={example}
-                onClick={() => runSearch(example)}
-                className="rounded-md border border-line bg-white px-3 py-2 text-left text-sm text-neutral-600 transition hover:border-neutral-900 hover:text-ink"
-              >
-                {example}
-              </button>
+        <section id="sources" className="grid border-b border-[#e0dedb] bg-[#FBFAF9] md:grid-cols-4">
+          {sources.map(([name, detail]) => (
+            <div key={name} className="border-b border-r border-[#e0dedb] p-6 md:border-b-0">
+              <div className="mb-10 h-1 w-24 bg-[#37322F]" />
+              <h3 className="text-sm font-semibold text-[#49423D]">{name}</h3>
+              <p className="mt-2 text-sm font-medium leading-6 text-[#605A57]">{detail}</p>
+            </div>
+          ))}
+        </section>
+
+        <section id="search" className="px-4 py-12 sm:px-8">
+          <div className="mx-auto max-w-[960px]">
+            <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-[#827C77]">Try the agent</div>
+                <h2 className="mt-2 font-serif text-4xl font-normal text-[#37322F]">Ask Voltaire</h2>
+              </div>
+              <p className="max-w-md text-sm font-medium leading-6 text-[#605A57]">
+                It will plan sources first. If nothing is connected, it returns no evidence instead of making things up.
+              </p>
+            </div>
+
+            <SearchBar onSearch={runSearch} loading={loading} />
+            <div className="mt-4 flex flex-wrap gap-2">
+              {examples.map((example) => (
+                <button
+                  key={example}
+                  onClick={() => runSearch(example)}
+                  className="rounded-full border border-[#d8d8d2] bg-white px-4 py-2 text-left text-sm font-medium text-[#605A57] transition hover:border-[#37322F] hover:text-[#37322F]"
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-8">
+              {loading ? (
+                <div className="rounded-lg border border-[#d8d8d2] bg-white p-6 text-sm font-medium text-[#605A57] shadow-glow">
+                  Planning tools, checking connected sources, and evaluating evidence...
+                </div>
+              ) : result ? (
+                <AnswerPanel result={result} />
+              ) : (
+                <div className="grid gap-4 rounded-lg border border-[#d8d8d2] bg-white p-5 text-sm font-medium text-[#605A57] shadow-glow md:grid-cols-3">
+                  <div>Connect Butterbase before importing messages or meetings.</div>
+                  <div>Add Neo4j to resolve people, tasks, and source relationships.</div>
+                  <div>Add an LLM key to plan tools and evaluate retrieved evidence.</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-[#e0dedb] px-4 py-12 sm:px-8">
+          <div className="mx-auto grid max-w-[960px] gap-4 md:grid-cols-3">
+            {[
+              [ShieldCheck, "No credential scraping", "Use official exports, OAuth-capable APIs, and explicit imports."],
+              [KeyRound, "Bring your keys", "Butterbase, Neo4j, Exa, and LLM keys activate the full backend."],
+              [Sparkles, "Evidence first", "Answers are grounded in retrieved cards, graph traces, and source metadata."],
+            ].map(([Icon, title, text]) => (
+              <div key={String(title)} className="rounded-lg border border-[#e0dedb] bg-white p-6">
+                <Icon className="mb-10 h-5 w-5 text-[#37322F]" />
+                <h3 className="text-sm font-semibold text-[#49423D]">{String(title)}</h3>
+                <p className="mt-2 text-sm font-medium leading-6 text-[#605A57]">{String(text)}</p>
+              </div>
             ))}
           </div>
         </section>
-
-        <div className="mt-8">
-          {loading ? (
-            <div className="rounded-lg border border-line bg-panel p-6 text-neutral-500 shadow-glow">Planning tools, checking connected sources, and evaluating evidence...</div>
-          ) : result ? (
-            <AnswerPanel result={result} />
-          ) : (
-            <div className="grid gap-4 rounded-lg border border-line bg-panel p-5 text-sm text-neutral-500 shadow-glow md:grid-cols-3">
-              <div>Personal messages require a connected message source.</div>
-              <div>Meeting notes require an imported or connected transcript source.</div>
-              <div>Flight results require a live tool or ingested travel data.</div>
-            </div>
-          )}
-        </div>
       </div>
     </main>
   );

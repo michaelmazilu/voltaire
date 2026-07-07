@@ -53,7 +53,7 @@ export async function graphSearch(query: string, intent: QueryIntent): Promise<G
     }
 
     const res = await session.run(cypher, params);
-    return res.records.map((rec) => ({
+    return res.records.map((rec: any) => ({
       from: rec.get("from") as string,
       type: rec.get("type") as any,
       to: rec.get("to") as string,

@@ -14,8 +14,8 @@ export function routeQuery(query: string): RouteResult {
     q.includes("cheap") ||
     q.includes("ticket") ||
     q.includes("fly") ||
-    q.includes("toronto") ||
-    q.includes("san francisco")
+    q.includes("airport") ||
+    q.includes("travel")
   ) {
     return {
       intent: "flight_search",
@@ -38,11 +38,12 @@ export function routeQuery(query: string): RouteResult {
   }
   if (
     q.includes("boss") ||
+    q.includes("manager") ||
+    q.includes("work") ||
+    q.includes("task") ||
     q.includes("told me") ||
     q.includes("meeting") ||
     q.includes("remind me") ||
-    q.includes("andrey") ||
-    q.includes("sofia") ||
     q.includes("standup") ||
     q.includes("action item")
   ) {
