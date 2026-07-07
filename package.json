@@ -14,7 +14,8 @@
     "neo4j-driver": "^6.2.0",
     "next": "^16.2.10",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "rocketride": "^1.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

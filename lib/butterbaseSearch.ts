@@ -1,5 +1,6 @@
-import { callMcpTool } from "./butterbase";
+import { callMcpTool, getTableName } from "./butterbase";
 import { compactText } from "./normalize";
+import { USER_ID } from "./seed";
 import type { MemoryItem, Source } from "./types";
 
 export async function butterbaseSearch(query: string, filters: { sources?: Source[] } = {}): Promise<MemoryItem[]> {
@@ -9,18 +10,21 @@ export async function butterbaseSearch(query: string, filters: { sources?: Sourc
   const results: MemoryItem[] = [];
   const terms = compactText(query).split(" ").filter((term) => term.length > 2);
 
+  const instagramTable = getTableName(USER_ID, "instagram");
+  const googleMeetTable = getTableName(USER_ID, "google_meet");
+
   try {
     // 1. Fetch Instagram messages
     if (!filters.sources || filters.sources.includes("instagram")) {
       const data = await callMcpTool("select_rows", {
         app_id: appId,
-        table: "instagram_messages",
+        table: instagramTable,
         limit: 100
       }).catch(() => []);
 
       const messages = (Array.isArray(data) ? data : []).map((message: any) => ({
         id: message.id,
-        userId: "michael",
+        userId: USER_ID,
         source: "instagram" as Source,
         sourceType: "message" as any,
         title: `Instagram DM with ${message.recipient}`,
@@ -37,7 +41,7 @@ export async function butterbaseSearch(query: string, filters: { sources?: Sourc
     if (!filters.sources || filters.sources.includes("google_meet")) {
       const data = await callMcpTool("select_rows", {
         app_id: appId,
-        table: "meeting_notes",
+        table: googleMeetTable,
         limit: 100
       }).catch(() => []);
 

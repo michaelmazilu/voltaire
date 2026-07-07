@@ -1,3 +1,5 @@
+import "./patch-process";
+import { RocketRideClient, Question, Answer } from "rocketride";
 import { bossAnswer, flightAnswer, instagramAnswer, summaryAnswer } from "./templates";
 import type { EvidenceCard, FlightResult, QueryIntent } from "./types";
 
@@ -12,13 +14,101 @@ export async function evaluateAnswer({
   evidenceCards: EvidenceCard[];
   flights?: FlightResult[];
 }) {
+  // Try RocketRide Cloud first if configured
+  if (process.env.ROCKETRIDE_APIKEY) {
+    const rrAnswer = await evaluateWithRocketRide({ query, evidenceCards, flights });
+    if (rrAnswer) return rrAnswer;
+  }
+
+  // Fallback to direct LLM completion (Mistral / OpenAI)
   const llmAnswer = await llmEvaluate({ query, evidenceCards, flights });
   if (llmAnswer) return llmAnswer;
 
+  // Static templates fallback if no keys are configured
   if (intent === "flight_search") return flightAnswer(flights);
   if (intent === "personal_memory_search") return instagramAnswer(evidenceCards[0]);
   if (intent === "work_memory_search") return bossAnswer(evidenceCards[0]);
   return summaryAnswer(evidenceCards, flights);
+}
+
+async function evaluateWithRocketRide({
+  query,
+  evidenceCards,
+  flights,
+}: {
+  query: string;
+  evidenceCards: EvidenceCard[];
+  flights: FlightResult[];
+}) {
+  const apiKey = process.env.ROCKETRIDE_APIKEY;
+  const uri = process.env.ROCKETRIDE_URI || "wss://api.rocketride.ai";
+
+  if (!apiKey) return "";
+
+  const client = new RocketRideClient({
+    auth: apiKey,
+    uri,
+  });
+
+  try {
+    console.log("Connecting to RocketRide Cloud...");
+    await client.connect();
+
+    // Define the pipeline config for the Answer Synthesis
+    const pipelineConfig = {
+      name: "voltaire-synthesis",
+      description: "Voltaire Answer Synthesis Pipeline",
+      version: 1,
+      components: [
+        {
+          id: "chat_input",
+          provider: "webhook",
+          config: {},
+        },
+        {
+          id: "ai_chat",
+          provider: "ai_chat",
+          config: {
+            model: "openai/gpt-4o-mini",
+            temperature: 0,
+          },
+          input: [
+            {
+              lane: "text",
+              from: "chat_input",
+            },
+          ],
+        },
+      ],
+      source: "chat_input",
+    };
+
+    console.log("Starting RocketRide synthesis pipeline...");
+    const { token } = await client.use({ pipeline: pipelineConfig });
+
+    console.log("Sending chat prompt to RocketRide...");
+    const question = new Question({ expectJson: false });
+    question.addInstruction(
+      "System",
+      "You are Voltaire. Answer using only the provided evidence. Cite source, timestamp, and exact quotes when relevant. For flights, do not claim booking. If evidence is weak, say so."
+    );
+    question.addQuestion(JSON.stringify({ query, evidenceCards, flights }));
+
+    const response = await client.chat({ token, question });
+    const answerText = response?.data?.answer ?? response?.answers?.[0] ?? "";
+
+    await client.terminate(token);
+    await client.disconnect();
+
+    console.log("RocketRide synthesis completed successfully.");
+    return answerText.trim();
+  } catch (error) {
+    console.error("RocketRide Cloud evaluation failed, falling back:", error);
+    try {
+      await client.disconnect();
+    } catch {}
+    return "";
+  }
 }
 
 async function llmEvaluate({

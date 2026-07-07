@@ -20,6 +20,7 @@ export async function POST(request: Request) {
       results_count: result.evidenceCards.length + (result.flights?.length ?? 0),
     },
   ]).catch(() => null);
+
   return NextResponse.json({
     query,
     intent: route.intent,

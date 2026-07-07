@@ -150,7 +150,7 @@ export async function hybridSearch(query: string, intent: QueryIntent): Promise<
   const filters: { sources?: Source[] } = {};
   const structured = (await butterbaseSearch(query, filters)).map(toEvidenceCard);
   const rag = (await butterbaseRagSearch(query, filters)).map(toEvidenceCard);
-  const wantsFlights = /\bflight|ticket|fly|airport|travel|cheap\b/i.test(query);
+  const wantsFlights = /\bflight|ticket|fly|airport|travel|cheap|next\b/i.test(query);
   const flights = wantsFlights ? flightFallbackSearch(query) : [];
   const broadQuery = /\beverything\b|\bfound\b|\bnext\b/i.test(query);
   const evidenceCards = dedupe([

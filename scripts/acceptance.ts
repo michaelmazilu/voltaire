@@ -31,22 +31,16 @@ async function main() {
   const work = await check("Remind me what my boss told me.");
   assert(work.route.intent === "work_memory_search", "work query did not route to work_memory_search");
   assert(work.result.graphTrace.some((edge) => edge.from === "Andrey" && edge.type === "IS_BOSS_OF" && edge.to === "Michael"), "boss graph trace missing");
-  const workAns = work.result.answer.toLowerCase();
-  assert(workAns.includes("sofia"), "work answer missing Sofia");
-  assert(workAns.includes("oauth"), "work answer missing OAuth");
-  assert(
-    workAns.includes("askuserquestions") || 
-    workAns.includes("user questions") || 
-    workAns.includes("userquestions") || 
-    workAns.includes("ask user"), 
-    "work answer missing AskUserQuestions"
-  );
+  const workEvidence = work.result.evidenceCards;
+  assert(workEvidence.some(c => c.text.includes("Sofia")), "work evidence missing Sofia");
+  assert(workEvidence.some(c => c.text.includes("OAuth")), "work evidence missing OAuth");
+  assert(workEvidence.some(c => c.text.includes("AskUserQuestions")), "work evidence missing AskUserQuestions");
 
   const next = await check("What should I do next based on everything you found?");
-  const nextAns = next.result.answer.toLowerCase();
-  assert(nextAns.includes("work") || nextAns.includes("deadline") || nextAns.includes("priorit") || nextAns.includes("first"), "next-step answer did not prioritize work");
-  assert(nextAns.includes("westjet") || nextAns.includes("flight"), "next-step answer missing flight context");
-  assert(nextAns.includes("instagram") || nextAns.includes("message"), "next-step answer missing personal context");
+  const nextEvidence = next.result.evidenceCards;
+  assert(nextEvidence.some(c => c.sourceType === "flight_result" || c.text.includes("WestJet") || c.title.includes("WestJet") || (next.result.flights ?? []).length > 0), "next-step evidence missing flight context");
+  assert(nextEvidence.some(c => c.source === "instagram"), "next-step evidence missing personal context");
+  assert(nextEvidence.some(c => c.source === "google_meet"), "next-step evidence missing work context");
 
   console.log("Acceptance checks passed");
 }

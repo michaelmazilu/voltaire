@@ -13,11 +13,11 @@ export async function butterbaseRagSearch(
       app_id: appId,
       collection: "memories",
       query: query,
-      top_k: 5
+      top_k: 20
     });
 
     const chunks = Array.isArray(res?.chunks) ? res.chunks : [];
-    return chunks.map((chunk: any, index: number) => ({
+    const mapped = chunks.map((chunk: any, index: number) => ({
       id: `rag_${index}`,
       userId: "michael",
       source: (chunk.metadata?.source || "fallback") as Source,
@@ -26,6 +26,8 @@ export async function butterbaseRagSearch(
       text: chunk.content,
       metadata: chunk.metadata || {},
     }));
+
+    return mapped.filter((item) => !filters.sources || filters.sources.includes(item.source));
   } catch (error) {
     console.error("Butterbase RAG search failed:", error);
     return [];

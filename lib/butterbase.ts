@@ -60,7 +60,21 @@ export async function callMcpTool(name: string, args: any) {
     throw new Error(`MCP tool ${name} returned error: ${json.error.message}`);
   }
 
-  return JSON.parse(json.result.content[0].text);
+  const result = json.result;
+  if (result.isError) {
+    throw new Error(`MCP tool ${name} returned error: ${result.content[0].text}`);
+  }
+
+  const textContent = result.content[0].text;
+  if (textContent.startsWith("MCP error")) {
+    throw new Error(textContent);
+  }
+
+  try {
+    return JSON.parse(textContent);
+  } catch (e) {
+    return textContent;
+  }
 }
 
 export async function insertButterbaseRows(table: string, rows: Record<string, unknown>[]) {
@@ -71,4 +85,10 @@ export async function insertButterbaseRows(table: string, rows: Record<string, u
 
   await callMcpTool("insert_rows", { app_id: appId, table, rows });
   return { inserted: rows.length, configured: true };
+}
+
+export function getTableName(userId: string, platform: string): string {
+  const safeUserId = userId.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+  const safePlatform = platform.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+  return `${safeUserId}_${safePlatform}`;
 }
