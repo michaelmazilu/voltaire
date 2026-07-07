@@ -1,13 +1,11 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Database, Network, Search } from "lucide-react";
 import { useState } from "react";
 import { AnswerPanel } from "../components/AnswerPanel";
 import { SearchBar } from "../components/SearchBar";
 import { VoltaireMark } from "../components/VoltaireMark";
 import type { SearchResponse } from "../lib/types";
-
-
 
 export default function Home() {
   const [result, setResult] = useState<SearchResponse | null>(null);
@@ -40,7 +38,7 @@ export default function Home() {
             <div className="hidden items-center gap-5 text-[13px] font-medium text-[rgba(49,45,43,0.78)] sm:flex">
               <a href="#product">Product</a>
               <a href="#sources">Sources</a>
-              <a href="#search">Try it</a>
+              <a href="#search">Search</a>
             </div>
             <a
               href="/setup"
@@ -65,16 +63,16 @@ export default function Home() {
             </p>
             <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
               <a
-                href="#search"
+                href="/setup"
                 className="flex h-12 items-center gap-2 rounded-full bg-[#37322F] px-9 text-sm font-medium text-white shadow-[0_0_0_2.5px_rgba(255,255,255,0.08)_inset] transition hover:bg-[#2A2520]"
               >
-                Ask Voltaire <ArrowRight className="h-4 w-4" />
+                Configure data <ArrowRight className="h-4 w-4" />
               </a>
               <a
-                href="/setup"
+                href="#search"
                 className="flex h-12 items-center rounded-full border border-[rgba(55,50,47,0.15)] bg-white px-9 text-sm font-medium text-[#37322F] transition hover:bg-[#F0EEEC]"
               >
-                Configure sources
+                Start search
               </a>
             </div>
           </div>
@@ -124,12 +122,16 @@ export default function Home() {
         </section>
 
 
-        <section id="search" className="px-4 py-12 sm:px-8">
+        <section id="search" className="border-b border-[#e0dedb] px-4 py-12 sm:px-8">
           <div className="mx-auto max-w-[960px]">
             <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
               <div>
-                <h2 className="font-serif text-4xl font-normal text-[#37322F]">Ask Voltaire</h2>
+                <div className="text-xs font-medium uppercase tracking-wide text-[#827C77]">Search</div>
+                <h2 className="mt-2 font-serif text-4xl font-normal text-[#37322F]">Ask Voltaire</h2>
               </div>
+              <a href="/setup" className="text-sm font-semibold text-[#37322F] underline underline-offset-4">
+                Configure data
+              </a>
             </div>
 
             <SearchBar onSearch={runSearch} loading={loading} />
@@ -137,17 +139,11 @@ export default function Home() {
             <div className="mt-8">
               {loading ? (
                 <div className="rounded-lg border border-[#d8d8d2] bg-white p-6 text-sm font-medium text-[#605A57] shadow-glow">
-                  Planning tools, checking connected sources, and evaluating evidence...
+                  Searching connected sources...
                 </div>
               ) : result ? (
                 <AnswerPanel result={result} />
-              ) : (
-                <div className="grid gap-4 rounded-lg border border-[#d8d8d2] bg-white p-5 text-sm font-medium text-[#605A57] shadow-glow md:grid-cols-3">
-                  <div>Connect Butterbase before importing messages or meetings.</div>
-                  <div>Add Neo4j to resolve people, tasks, and source relationships.</div>
-                  <div>Add an LLM key to plan tools and evaluate retrieved evidence.</div>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
         </section>
