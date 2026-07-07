@@ -14,9 +14,12 @@ export function AnswerPanel({ result }: { result: SearchResponse }) {
   return (
     <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="space-y-5">
-        <div className="rounded-lg border border-line bg-panel/80 p-5 shadow-glow">
-          <div className="mb-3 text-xs uppercase tracking-wide text-teal-200">{result.intent}</div>
-          <p className="whitespace-pre-line text-base leading-7 text-slate-100">{result.answer}</p>
+        <div className="rounded-lg border border-line bg-white p-4 text-sm leading-6 text-neutral-500">
+          Evidence disclosure: no seed data is bundled. Results only appear when a connected tool or imported source returns evidence.
+        </div>
+        <div className="rounded-lg border border-line bg-panel p-5 shadow-glow">
+          <div className="mb-3 text-xs uppercase tracking-wide text-neutral-400">{result.intent}</div>
+          <p className="whitespace-pre-line text-base leading-7 text-ink">{result.answer}</p>
         </div>
         {result.flights?.length ? (
           <div className="grid gap-4 md:grid-cols-3">

@@ -2,6 +2,13 @@ import type { RouteResult } from "./types";
 
 export function routeQuery(query: string): RouteResult {
   const q = query.toLowerCase();
+  if (/^(hi|hello|hey|yo|sup|thanks|thank you)[!.?\s]*$/.test(q)) {
+    return {
+      intent: "conversation",
+      sources: [],
+      methods: ["llm_planner"],
+    };
+  }
   if (
     q.includes("flight") ||
     q.includes("cheap") ||
@@ -12,16 +19,16 @@ export function routeQuery(query: string): RouteResult {
   ) {
     return {
       intent: "flight_search",
-      sources: ["flight_fallbacks", "exa", "neo4j"],
+      sources: ["flight_tool", "exa", "neo4j"],
       methods: ["butterbase", "graph", "exa_optional"],
     };
   }
   if (
-    q.includes("toyesshh") ||
     q.includes("instagram") ||
     q.includes("dm") ||
     q.includes("i told") ||
-    q.includes("big butt")
+    q.includes("message") ||
+    q.includes("chat")
   ) {
     return {
       intent: "personal_memory_search",
@@ -47,7 +54,7 @@ export function routeQuery(query: string): RouteResult {
   }
   return {
     intent: "cross_source_search",
-    sources: ["instagram", "google_meet", "flight_fallbacks", "exa", "neo4j"],
+    sources: ["instagram", "google_meet", "flight_tool", "exa", "neo4j"],
     methods: ["butterbase", "keyword", "graph", "exa_optional"],
   };
 }

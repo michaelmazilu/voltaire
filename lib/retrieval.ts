@@ -1,19 +1,26 @@
 import { butterbaseSearch } from "./butterbaseSearch";
 import { butterbaseRagSearch } from "./butterbaseRag";
 import { resolveRelativeDate } from "./date";
+import { evaluateAnswer } from "./evaluator";
 import { exaSearch } from "./exa";
 import { graphSearch } from "./graphSearch";
-import { toEvidenceCard } from "./normalize";
+import { compactText, toEvidenceCard } from "./normalize";
 import { flightResults, meetingMemoryItems, instagramMemoryItems } from "./seed";
-import { bossAnswer, flightAnswer, instagramAnswer, summaryAnswer } from "./templates";
 import type { EvidenceCard, FlightResult, QueryIntent, SearchResponse, Source } from "./types";
 
 function loadingTrace(intent: QueryIntent) {
+  if (intent === "conversation") {
+    return [
+      "Understanding message...",
+      "No retrieval needed...",
+      "Responding without evidence cards...",
+    ];
+  }
   if (intent === "flight_search") {
     return [
       "Understanding query...",
       "Routing to web/flight search...",
-      "Checking fallback flight index...",
+      "Checking connected flight tools...",
       "Optionally enriching with Exa...",
       "Ranking cheapest reasonable options...",
       "Building evidence cards...",
@@ -24,7 +31,7 @@ function loadingTrace(intent: QueryIntent) {
       "Understanding query...",
       "Routing to Instagram memory...",
       "Searching Butterbase messages...",
-      "Resolving Michael → toyesshh in Neo4j...",
+      "Checking graph relationships...",
       "Checking exact phrase matches...",
       "Building evidence card...",
     ];
@@ -33,7 +40,7 @@ function loadingTrace(intent: QueryIntent) {
     return [
       "Understanding query...",
       "Routing to meeting memory...",
-      "Resolving boss relationship in Neo4j...",
+      "Checking graph relationships...",
       "Searching Google Meet notes...",
       "Extracting action items...",
       "Building evidence card...",
@@ -49,25 +56,46 @@ function loadingTrace(intent: QueryIntent) {
 
 function flightFallbackSearch(query: string): FlightResult[] {
   const wantedDate = resolveRelativeDate(query);
-  const routeMatches = flightResults().filter(
-    (flight) => flight.origin === "Toronto" && flight.destination === "San Francisco",
-  );
-  const exactDate = routeMatches.filter((flight) => flight.date === wantedDate);
-  return (exactDate.length ? exactDate : routeMatches).sort(
+  const q = compactText(query);
+  const routeMatches = flightResults().filter((flight) => {
+    const origin = compactText(flight.origin);
+    const destination = compactText(flight.destination);
+    return q.includes(origin) || q.includes(destination);
+  });
+  const candidates = routeMatches.length ? routeMatches : flightResults();
+  const exactDate = candidates.filter((flight) => flight.date === wantedDate);
+  return (exactDate.length ? exactDate : candidates).sort(
     (a, b) => a.layovers - b.layovers || a.price - b.price,
   );
 }
 
 function personalEvidence(query: string): EvidenceCard[] {
-  const exact = instagramMemoryItems().find((item) => item.text === "toyesshh you have a big butt");
-  const searched = butterbaseSearch(query, { sources: ["instagram"] });
-  return [exact, ...searched].filter(Boolean).map((item) => toEvidenceCard(item!));
+  const q = compactText(query);
+  const terms = new Set(q.split(" ").filter((term) => term.length > 2));
+  return instagramMemoryItems()
+    .map((item) => {
+      const text = compactText(`${item.text} ${item.participants?.join(" ") ?? ""}`);
+      const score = [...terms].reduce((total, term) => total + (text.includes(term) ? 1 : 0), 0);
+      return { item, score };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || Date.parse(b.item.timestamp ?? "") - Date.parse(a.item.timestamp ?? ""))
+    .map(({ item }) => toEvidenceCard(item));
 }
 
 function workEvidence(query: string): EvidenceCard[] {
-  const target = meetingMemoryItems().find((item) => item.id === "meet_001");
-  const searched = butterbaseSearch(query, { sources: ["google_meet"] });
-  return [target, ...searched].filter(Boolean).map((item) => toEvidenceCard(item!));
+  const q = compactText(query);
+  const terms = new Set(q.split(" ").filter((term) => term.length > 2));
+  return meetingMemoryItems()
+    .map((item) => {
+      const text = compactText(`${item.text} ${item.title} ${item.author} ${item.participants?.join(" ") ?? ""}`);
+      const termScore = [...terms].reduce((total, term) => total + (text.includes(term) ? 1 : 0), 0);
+      const actionScore = /need you|make sure|prioritize|blocked|action/i.test(item.text) ? 3 : 0;
+      return { item, score: termScore + actionScore };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || Date.parse(b.item.timestamp ?? "") - Date.parse(a.item.timestamp ?? ""))
+    .map(({ item }) => toEvidenceCard(item));
 }
 
 function flightEvidence(flights: FlightResult[]): EvidenceCard[] {
@@ -91,12 +119,23 @@ export async function hybridSearch(query: string, intent: QueryIntent): Promise<
   const graphTrace = await graphSearch(query, intent);
   const trace = loadingTrace(intent);
 
+  if (intent === "conversation") {
+    return {
+      answer: "Hi. Ask me what to find, and I will choose the right connected data source before retrieving evidence.",
+      evidenceCards: [],
+      flights: [],
+      graphTrace: [],
+      loadingTrace: trace,
+    };
+  }
+
   if (intent === "flight_search") {
     const flights = flightFallbackSearch(query);
     const exa = await exaSearch(query);
+    const evidenceCards = [...flightEvidence(flights), ...exa];
     return {
-      answer: flightAnswer(flights),
-      evidenceCards: [...flightEvidence(flights), ...exa],
+      answer: await evaluateAnswer({ query, intent, evidenceCards, flights }),
+      evidenceCards,
       flights,
       graphTrace,
       loadingTrace: trace,
@@ -106,7 +145,7 @@ export async function hybridSearch(query: string, intent: QueryIntent): Promise<
   if (intent === "personal_memory_search") {
     const evidenceCards = dedupe(personalEvidence(query));
     return {
-      answer: instagramAnswer(evidenceCards[0]),
+      answer: await evaluateAnswer({ query, intent, evidenceCards }),
       evidenceCards,
       graphTrace,
       loadingTrace: trace,
@@ -116,7 +155,7 @@ export async function hybridSearch(query: string, intent: QueryIntent): Promise<
   if (intent === "work_memory_search") {
     const evidenceCards = dedupe(workEvidence(query));
     return {
-      answer: bossAnswer(evidenceCards[0]),
+      answer: await evaluateAnswer({ query, intent, evidenceCards }),
       evidenceCards,
       graphTrace,
       loadingTrace: trace,
@@ -126,10 +165,19 @@ export async function hybridSearch(query: string, intent: QueryIntent): Promise<
   const filters: { sources?: Source[] } = {};
   const structured = butterbaseSearch(query, filters).map(toEvidenceCard);
   const rag = (await butterbaseRagSearch(query, filters)).map(toEvidenceCard);
-  const flights = query.toLowerCase().includes("next") || query.toLowerCase().includes("flight") ? flightFallbackSearch(query) : [];
-  const evidenceCards = dedupe([...structured, ...rag, ...workEvidence("boss Andrey OAuth Sofia AskUserQuestions")]);
+  const wantsFlights = /\bflight|ticket|fly|airport|travel|cheap\b/i.test(query);
+  const flights = wantsFlights ? flightFallbackSearch(query) : [];
+  const broadQuery = /\beverything\b|\bfound\b|\bnext\b/i.test(query);
+  const evidenceCards = dedupe([
+    ...structured,
+    ...rag,
+    ...workEvidence(query),
+    ...personalEvidence(query),
+    ...(broadQuery ? workEvidence(query) : []),
+    ...(broadQuery ? personalEvidence(query) : []),
+  ]);
   return {
-    answer: summaryAnswer(evidenceCards, flights),
+    answer: await evaluateAnswer({ query, intent, evidenceCards, flights }),
     evidenceCards: [...evidenceCards, ...flightEvidence(flights)],
     flights,
     graphTrace,

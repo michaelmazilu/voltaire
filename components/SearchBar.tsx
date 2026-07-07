@@ -18,17 +18,17 @@ export function SearchBar({
   }
 
   return (
-    <form onSubmit={submit} className="flex w-full items-center gap-3 rounded-lg border border-line bg-white/7 p-2 shadow-glow backdrop-blur">
-      <Search className="ml-3 h-5 w-5 text-teal-200" aria-hidden />
+    <form onSubmit={submit} className="flex w-full items-center gap-3 rounded-lg border border-line bg-white p-2 shadow-glow">
+      <Search className="ml-3 h-5 w-5 text-neutral-500" aria-hidden />
       <input
-        className="min-h-12 flex-1 bg-transparent text-base text-white outline-none placeholder:text-slate-500"
+        className="min-h-12 flex-1 bg-transparent text-base font-bold text-ink outline-none placeholder:text-neutral-400"
         placeholder="Ask Voltaire to find anything…"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         aria-label="Ask Voltaire"
       />
       <button
-        className="rounded-md bg-teal-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-teal-200 disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-md bg-ink px-5 py-3 text-sm font-bold text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60"
         disabled={loading}
       >
         {loading ? "Searching" : "Search"}

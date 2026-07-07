@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { meetingMemoryItems } from "../../../../lib/seed";
 
 export async function POST() {
-  return NextResponse.json({ inserted: meetingMemoryItems().length, source: "google_meet" });
+  return NextResponse.json({ inserted: 0, source: "google_meet", status: "no_ingest_source_configured" });
 }

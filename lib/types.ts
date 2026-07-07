@@ -63,6 +63,7 @@ export type MemoryItem = {
 };
 
 export type QueryIntent =
+  | "conversation"
   | "flight_search"
   | "personal_memory_search"
   | "work_memory_search"
