@@ -1,7 +1,7 @@
 "use client";
 
-import { Send, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { Plus, Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { AnswerPanel } from "./AnswerPanel";
 import { VoltaireMark } from "./VoltaireMark";
 import type { SearchResponse } from "../lib/types";
@@ -18,10 +18,11 @@ type ChatMessage =
       result: SearchResponse;
     };
 
-export function ChatInterface({ fullHeight = false }: { fullHeight?: boolean }) {
+export function ChatInterface({ initialQuery = "" }: { initialQuery?: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const submittedInitialQuery = useRef(false);
 
   async function runSearch(query: string) {
     const trimmedQuery = query.trim();
@@ -76,35 +77,20 @@ export function ChatInterface({ fullHeight = false }: { fullHeight?: boolean }) 
     }
   }
 
-  return (
-    <div className="overflow-hidden rounded-lg border border-[#d8d8d2] bg-white shadow-glow">
-      <div className={`flex flex-col ${fullHeight ? "h-[calc(100vh-112px)] min-h-[620px]" : "min-h-[520px]"}`}>
-        <div className="flex items-center justify-between border-b border-[#e6e2de] bg-[#FBFAF8] px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#37322F] text-white">
-              <Sparkles className="h-4 w-4" aria-hidden />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-[#37322F]">Voltaire Agent</div>
-              <div className="text-xs font-medium text-[#827C77]">
-                {loading ? "Thinking through sources..." : "Ready for your next question"}
-              </div>
-            </div>
-          </div>
-          <a
-            href="/setup"
-            className="rounded-md border border-[#d8d3ce] px-3 py-2 text-xs font-semibold text-[#37322F] transition hover:bg-[#F0EEEC]"
-          >
-            Integration
-          </a>
-        </div>
+  useEffect(() => {
+    if (!initialQuery.trim() || submittedInitialQuery.current) return;
+    submittedInitialQuery.current = true;
+    void runSearch(initialQuery);
+  }, [initialQuery]);
 
-        <div className="flex-1 space-y-5 overflow-y-auto bg-[#F7F5F3] px-4 py-5 sm:px-6">
+  return (
+    <div className="flex h-full flex-col bg-[#F7F5F3] text-[#37322F]">
+      <div className="flex-1 overflow-y-auto px-4 pb-40 pt-24 sm:px-8">
+        <div className="mx-auto w-full max-w-[760px]">
           {messages.length === 0 ? (
-            <div className="mx-auto flex min-h-[330px] max-w-[640px] flex-col items-center justify-center text-center">
-              <VoltaireMark className="mb-5 h-10 w-10 text-[#37322F]" />
-              <h1 className="font-serif text-3xl font-normal text-[#37322F]">What do you want to find?</h1>
-              <div className="mt-6 grid w-full gap-3 text-left sm:grid-cols-3">
+            <div className="flex min-h-[calc(100vh-330px)] flex-col items-center justify-center text-center">
+              <h1 className="font-serif text-[34px] font-normal leading-tight text-[#37322F]">What’s on the agenda today?</h1>
+              <div className="mt-8 grid w-full max-w-[680px] gap-3 text-left sm:grid-cols-3">
                 {[
                   "What did I say about Q3 hiring?",
                   "Find my latest meeting notes with action items.",
@@ -114,7 +100,7 @@ export function ChatInterface({ fullHeight = false }: { fullHeight?: boolean }) 
                     key={prompt}
                     type="button"
                     onClick={() => runSearch(prompt)}
-                    className="rounded-md border border-[#ded9d4] bg-white p-3 text-left text-sm font-medium leading-5 text-[#605A57] transition hover:border-[#BEB7B0] hover:text-[#37322F]"
+                    className="rounded-2xl border border-[rgba(55,50,47,0.14)] bg-white p-4 text-left text-sm font-medium leading-5 text-[#605A57] shadow-[0_1px_2px_rgba(55,50,47,0.04)] transition hover:border-[rgba(55,50,47,0.28)] hover:text-[#37322F]"
                   >
                     {prompt}
                   </button>
@@ -122,43 +108,56 @@ export function ChatInterface({ fullHeight = false }: { fullHeight?: boolean }) 
               </div>
             </div>
           ) : (
-            messages.map((message) =>
-              message.role === "user" ? (
-                <div key={message.id} className="flex justify-end">
-                  <div className="max-w-[78%] rounded-lg bg-[#37322F] px-4 py-3 text-sm font-medium leading-6 text-white">
-                    {message.content}
+            <div className="space-y-7">
+              {messages.map((message) =>
+                message.role === "user" ? (
+                  <div key={message.id} className="flex justify-end">
+                    <div className="max-w-[78%] rounded-3xl bg-[#37322F] px-5 py-3 text-sm font-medium leading-6 text-white">
+                      {message.content}
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div key={message.id} className="max-w-[86%]">
-                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase text-[#827C77]">
-                    <VoltaireMark className="h-4 w-4 text-[#37322F]" />
-                    Voltaire
+                ) : (
+                  <div key={message.id} className="max-w-[92%]">
+                    <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase text-[#827C77]">
+                      <VoltaireMark className="h-4 w-4 text-[#37322F]" />
+                      Voltaire
+                    </div>
+                    <div>
+                      <AnswerPanel result={message.result} />
+                    </div>
                   </div>
-                  <AnswerPanel result={message.result} />
-                </div>
-              ),
-            )
+                ),
+              )}
+            </div>
           )}
 
           {loading ? (
-            <div className="max-w-[86%] rounded-lg border border-[#d8d8d2] bg-white p-4 text-sm font-medium text-[#605A57] shadow-glow">
+            <div className="mt-7 max-w-[92%] rounded-3xl border border-[rgba(55,50,47,0.12)] bg-white p-4 text-sm font-medium text-[#605A57] shadow-glow">
               Planning tools, checking connected sources, and evaluating evidence...
             </div>
           ) : null}
         </div>
+      </div>
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            runSearch(query);
-          }}
-          className="border-t border-[#e6e2de] bg-white p-3"
-        >
-          <div className="flex items-end gap-3 rounded-lg border border-[#d8d3ce] bg-[#FBFAF8] p-2 focus-within:border-[#37322F]">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          runSearch(query);
+        }}
+        className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#F7F5F3] via-[#F7F5F3] to-transparent px-4 pb-5 pt-10 md:left-[312px]"
+      >
+        <div className="mx-auto w-full max-w-[920px]">
+          <div className="flex min-h-16 items-end gap-3 rounded-[30px] bg-white p-2 shadow-[0_0_0_1px_rgba(55,50,47,0.12),0_18px_60px_rgba(55,50,47,0.12)] focus-within:shadow-[0_0_0_1px_rgba(55,50,47,0.28),0_18px_60px_rgba(55,50,47,0.12)]">
+            <button
+              type="button"
+              className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#605A57] transition hover:bg-[#F0EEEC]"
+              aria-label="Attach source"
+            >
+              <Plus className="h-5 w-5" aria-hidden />
+            </button>
             <textarea
-              className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-2 py-3 text-base font-medium leading-6 text-[#37322F] outline-none placeholder:text-[#9B948E]"
-              placeholder="Message Voltaire..."
+              className="max-h-36 min-h-12 flex-1 resize-none bg-transparent py-3 text-base font-medium leading-6 text-[#37322F] outline-none placeholder:text-[#9B948E]"
+              placeholder="Ask anything"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={(event) => {
@@ -167,20 +166,20 @@ export function ChatInterface({ fullHeight = false }: { fullHeight?: boolean }) 
                   runSearch(query);
                 }
               }}
-              aria-label="Message Voltaire"
+              aria-label="Ask Voltaire"
               rows={1}
             />
             <button
               type="submit"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#37322F] text-white transition hover:bg-[#2A2520] disabled:cursor-not-allowed disabled:opacity-50"
+              className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#37322F] text-white transition hover:bg-[#2A2520] disabled:cursor-not-allowed disabled:opacity-45"
               disabled={loading || !query.trim()}
               aria-label="Send message"
             >
               <Send className="h-4 w-4" aria-hidden />
             </button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }
