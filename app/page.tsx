@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowRight, Database, KeyRound, Network, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { AnswerPanel } from "../components/AnswerPanel";
 import { SearchBar } from "../components/SearchBar";
@@ -130,9 +129,6 @@ export default function Home() {
               <div>
                 <h2 className="font-serif text-4xl font-normal text-[#37322F]">Ask Voltaire</h2>
               </div>
-              <p className="max-w-md text-sm font-medium leading-6 text-[#605A57]">
-                It will plan sources first. If nothing is connected, it returns no evidence instead of making things up.
-              </p>
             </div>
 
             <SearchBar onSearch={runSearch} loading={loading} />
@@ -155,21 +151,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border-t border-[#e0dedb] px-4 py-12 sm:px-8">
-          <div className="mx-auto grid max-w-[960px] gap-4 md:grid-cols-3">
-            {[
-              [ShieldCheck, "No credential scraping", "Use official exports, OAuth-capable APIs, and explicit imports."],
-              [KeyRound, "Bring your keys", "Butterbase, Neo4j, Exa, and LLM keys activate the full backend."],
-              [Sparkles, "Evidence first", "Answers are grounded in retrieved cards, graph traces, and source metadata."],
-            ].map(([Icon, title, text]) => (
-              <div key={String(title)} className="rounded-lg border border-[#e0dedb] bg-white p-6">
-                <Icon className="mb-10 h-5 w-5 text-[#37322F]" />
-                <h3 className="text-sm font-semibold text-[#49423D]">{String(title)}</h3>
-                <p className="mt-2 text-sm font-medium leading-6 text-[#605A57]">{String(text)}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </main>
   );
