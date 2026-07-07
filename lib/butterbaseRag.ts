@@ -27,7 +27,7 @@ export async function butterbaseRagSearch(
       metadata: chunk.metadata || {},
     }));
 
-    return mapped.filter((item) => !filters.sources || filters.sources.includes(item.source));
+    return mapped.filter((item: MemoryItem) => !filters.sources || filters.sources.includes(item.source));
   } catch (error) {
     console.error("Butterbase RAG search failed:", error);
     return [];

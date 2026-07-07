@@ -54,7 +54,7 @@ export async function graphSearch(query: string, intent: QueryIntent, retries = 
       }
 
       const res = await session.run(cypher, params);
-      return res.records.map((rec) => ({
+      return res.records.map((rec: import("neo4j-driver").Record) => ({
         from: rec.get("from") as string,
         type: rec.get("type") as any,
         to: rec.get("to") as string,
