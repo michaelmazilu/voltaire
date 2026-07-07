@@ -2,6 +2,7 @@
 
 import { ArrowRight, Plus, Send } from "lucide-react";
 import { useState } from "react";
+import { FloralCorner, FloralDivider } from "../components/FloralAccents";
 import { VoltaireMark } from "../components/VoltaireMark";
 
 export default function Home() {
@@ -16,6 +17,9 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#F7F5F3] text-[#37322F]">
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1060px] flex-col border-x border-[rgba(55,50,47,0.12)] shadow-[1px_0_0_white,-1px_0_0_white]">
+        <FloralCorner className="-left-10 top-24 z-0 hidden scale-[1.15] opacity-90 sm:block" />
+        <FloralCorner className="right-6 top-[390px] z-0 hidden scale-[0.72] rotate-[16deg] opacity-75 lg:block" />
+        <FloralCorner className="left-[70%] top-28 z-0 hidden scale-[0.46] rotate-[-20deg] opacity-65 md:block" />
         <header className="absolute left-0 top-0 z-20 flex h-[84px] w-full items-center justify-center px-6">
           <div className="absolute left-0 top-[42px] h-px w-full border-t border-[rgba(55,50,47,0.12)] shadow-[0_1px_0_white]" />
           <nav className="relative z-10 flex h-12 w-full max-w-[760px] items-center justify-between rounded-full bg-[#F7F5F3] px-4 py-2 shadow-[0_0_0_2px_white]">
@@ -44,6 +48,7 @@ export default function Home() {
             <p className="max-w-[600px] text-base font-medium leading-7 text-[rgba(55,50,47,0.78)] sm:text-lg">
               Voltaire plans the right tools, retrieves evidence from connected sources, traverses relationships, and returns cited answers without bundled seed data.
             </p>
+            <FloralDivider />
             <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
               <a
                 href="/chat"
@@ -67,10 +72,10 @@ export default function Home() {
               event.preventDefault();
               openChat();
             }}
-            className="mx-auto max-w-[760px]"
+            className="relative mx-auto max-w-[760px]"
           >
             <div
-              className="flex min-h-16 items-end gap-3 rounded-[30px] bg-white p-2 shadow-[0_0_0_1px_rgba(55,50,47,0.12),0_18px_60px_rgba(55,50,47,0.12)] focus-within:shadow-[0_0_0_1px_rgba(55,50,47,0.28),0_18px_60px_rgba(55,50,47,0.12)]"
+              className="relative z-10 flex min-h-16 items-end gap-3 rounded-[30px] bg-white p-2 shadow-[0_0_0_1px_rgba(55,50,47,0.12),0_18px_60px_rgba(55,50,47,0.12)] focus-within:shadow-[0_0_0_1px_rgba(55,50,47,0.28),0_18px_60px_rgba(55,50,47,0.12)]"
             >
               <button
                 type="button"

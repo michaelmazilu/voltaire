@@ -6,7 +6,7 @@ import { AnswerPanel } from "./AnswerPanel";
 import { VoltaireMark } from "./VoltaireMark";
 import type { SearchResponse } from "../lib/types";
 
-type ChatMessage =
+export type ChatMessage =
   | {
       id: string;
       role: "user";
@@ -18,11 +18,22 @@ type ChatMessage =
       result: SearchResponse;
     };
 
-export function ChatInterface({ initialQuery = "" }: { initialQuery?: string }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export function ChatInterface({
+  chatId,
+  initialQuery = "",
+  initialMessages = [],
+  onMessagesChange,
+}: {
+  chatId: string;
+  initialQuery?: string;
+  initialMessages?: ChatMessage[];
+  onMessagesChange?: (messages: ChatMessage[]) => void;
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const submittedInitialQuery = useRef(false);
+  const onMessagesChangeRef = useRef(onMessagesChange);
 
   async function runSearch(query: string) {
     const trimmedQuery = query.trim();
@@ -78,15 +89,30 @@ export function ChatInterface({ initialQuery = "" }: { initialQuery?: string }) 
   }
 
   useEffect(() => {
+    setMessages(initialMessages);
+    setQuery("");
+    setLoading(false);
+    submittedInitialQuery.current = false;
+  }, [chatId]);
+
+  useEffect(() => {
     if (!initialQuery.trim() || submittedInitialQuery.current) return;
     submittedInitialQuery.current = true;
     void runSearch(initialQuery);
-  }, [initialQuery]);
+  }, [initialQuery, chatId]);
+
+  useEffect(() => {
+    onMessagesChangeRef.current = onMessagesChange;
+  }, [onMessagesChange]);
+
+  useEffect(() => {
+    onMessagesChangeRef.current?.(messages);
+  }, [messages]);
 
   return (
     <div className="flex h-full flex-col bg-[#F7F5F3] text-[#37322F]">
       <div className="flex-1 overflow-y-auto px-4 pb-40 pt-24 sm:px-8">
-        <div className="mx-auto w-full max-w-[760px]">
+        <div className="relative mx-auto w-full max-w-[760px]">
           {messages.length === 0 ? (
             <div className="flex min-h-[calc(100vh-330px)] flex-col items-center justify-center text-center">
               <h1 className="font-serif text-[34px] font-normal leading-tight text-[#37322F]">What’s on the agenda today?</h1>
@@ -147,7 +173,7 @@ export function ChatInterface({ initialQuery = "" }: { initialQuery?: string }) 
         className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#F7F5F3] via-[#F7F5F3] to-transparent px-4 pb-5 pt-10 md:left-[312px]"
       >
         <div className="mx-auto w-full max-w-[920px]">
-          <div className="flex min-h-16 items-end gap-3 rounded-[30px] bg-white p-2 shadow-[0_0_0_1px_rgba(55,50,47,0.12),0_18px_60px_rgba(55,50,47,0.12)] focus-within:shadow-[0_0_0_1px_rgba(55,50,47,0.28),0_18px_60px_rgba(55,50,47,0.12)]">
+          <div className="relative flex min-h-16 items-end gap-3 rounded-[30px] bg-white p-2 shadow-[0_0_0_1px_rgba(55,50,47,0.12),0_18px_60px_rgba(55,50,47,0.12)] focus-within:shadow-[0_0_0_1px_rgba(55,50,47,0.28),0_18px_60px_rgba(55,50,47,0.12)]">
             <button
               type="button"
               className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#605A57] transition hover:bg-[#F0EEEC]"
