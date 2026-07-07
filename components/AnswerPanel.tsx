@@ -1,8 +1,39 @@
 import ReactMarkdown from "react-markdown";
+import { FileText, Globe, Instagram, Plane, Video } from "lucide-react";
 import type { SearchResponse } from "../lib/types";
-import { EvidenceCard } from "./EvidenceCard";
+
+function sourceMeta(source: SearchResponse["evidenceCards"][number]["source"]) {
+  switch (source) {
+    case "instagram":
+      return { label: "Instagram", Icon: Instagram };
+    case "google_meet":
+      return { label: "Google Meet", Icon: Video };
+    case "exa":
+      return { label: "Exa", Icon: Globe };
+    case "manual":
+      return { label: "Manual", Icon: FileText };
+    case "fallback":
+    default:
+      return { label: "Flight", Icon: Plane };
+  }
+}
 
 export function AnswerPanel({ result }: { result: SearchResponse }) {
+  const groupedSources = result.evidenceCards.reduce<
+    Array<{
+      source: SearchResponse["evidenceCards"][number]["source"];
+      count: number;
+    }>
+  >((groups, card) => {
+    const existing = groups.find((group) => group.source === card.source);
+    if (existing) {
+      existing.count += 1;
+      return groups;
+    }
+    groups.push({ source: card.source, count: 1 });
+    return groups;
+  }, []);
+
   return (
     <div className="rounded-lg border border-[rgba(55,50,47,0.12)] bg-white p-5 shadow-[0_1px_2px_rgba(55,50,47,0.05)]">
       <div className="mb-3 text-xs uppercase tracking-wide text-[#827C77]">{result.intent}</div>
@@ -28,10 +59,21 @@ export function AnswerPanel({ result }: { result: SearchResponse }) {
       {result.evidenceCards.length ? (
         <div className="mt-5 border-t border-[rgba(55,50,47,0.08)] pt-4">
           <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#827C77]">Citations</div>
-          <div className="grid gap-3">
-            {result.evidenceCards.slice(0, 4).map((card) => (
-              <EvidenceCard key={card.id} card={card} />
-            ))}
+          <div className="flex flex-wrap gap-2">
+            {groupedSources.map(({ source, count }) => {
+              const sourceInfo = sourceMeta(source);
+              const Icon = sourceInfo.Icon;
+              return (
+                <div
+                  key={source}
+                  className="inline-flex items-center gap-2 rounded-full border border-[rgba(55,50,47,0.12)] bg-[#F7F5F3] px-3 py-1.5 text-sm font-medium text-[#37322F]"
+                >
+                  <Icon className="h-4 w-4" aria-hidden />
+                  <span>{sourceInfo.label}</span>
+                  <span className="text-xs text-[#827C77]">×{count}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}
