@@ -1,0 +1,8 @@
+node_modules
+.next
+.npm-cache
+dist
+*.log
+.env*
+tsconfig.tsbuildinfo
+.git.broken.*
