@@ -1,3 +1,4 @@
+import ReactMarkdown from "react-markdown";
 import type { SearchResponse } from "../lib/types";
 import { EvidenceCard } from "./EvidenceCard";
 import { FlightCard } from "./FlightCard";
@@ -19,7 +20,9 @@ export function AnswerPanel({ result }: { result: SearchResponse }) {
         </div>
         <div className="rounded-lg border border-line bg-panel p-5 shadow-glow">
           <div className="mb-3 text-xs uppercase tracking-wide text-neutral-400">{result.intent}</div>
-          <p className="whitespace-pre-line text-base leading-7 text-ink">{result.answer}</p>
+          <div className="prose prose-sm max-w-none text-base leading-7 text-ink [&_hr]:my-3 [&_hr]:border-line [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_strong]:font-semibold [&_p]:mb-2 last:[&_p]:mb-0">
+            <ReactMarkdown>{result.answer}</ReactMarkdown>
+          </div>
         </div>
         {result.flights?.length ? (
           <div className="grid gap-4 md:grid-cols-3">

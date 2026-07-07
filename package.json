@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
-    "test:acceptance": "tsx scripts/acceptance.ts"
+    "test:acceptance": "tsx --env-file=.env.local scripts/acceptance.ts"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -15,6 +15,7 @@
     "next": "^16.2.10",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-markdown": "^10.1.0",
     "rocketride": "^1.3.0"
   },
   "devDependencies": {
