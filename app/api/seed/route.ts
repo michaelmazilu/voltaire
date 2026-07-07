@@ -141,7 +141,7 @@ export async function POST() {
             }
           }
         },
-        _drop: ["flight_fallbacks", "instagram_messages", "meeting_notes"]
+        _drop: ["flight_fallbacks", "instagram_messages", "meeting_notes", "michael_instagram", "michael_google_meet"]
       }
     });
 
