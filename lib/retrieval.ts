@@ -5,7 +5,7 @@ import { evaluateAnswer } from "./evaluator";
 import { exaSearch } from "./exa";
 import { graphSearch } from "./graphSearch";
 import { compactText, toEvidenceCard } from "./normalize";
-import { flightResults, meetingMemoryItems, instagramMemoryItems } from "./seed";
+import { flightResults } from "./seed";
 import type { EvidenceCard, FlightResult, QueryIntent, SearchResponse, Source } from "./types";
 
 function loadingTrace(intent: QueryIntent) {

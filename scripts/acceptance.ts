@@ -24,15 +24,15 @@ async function main() {
   const personal = await check("Find that one time I told toyesshh he had a big butt.");
   assert(personal.route.intent === "personal_memory_search", "personal query did not route to personal_memory_search");
   assert(personal.result.evidenceCards[0].text === "toyesshh you have a big butt", "personal quote changed");
-  assert(personal.result.evidenceCards[0].metadata.sender === "Michael", "personal sender missing");
+  assert(personal.result.evidenceCards[0].metadata.sender === "Alex Rivera", "personal sender missing");
   assert(personal.result.evidenceCards[0].metadata.recipient === "toyesshh", "personal recipient missing");
-  assert(personal.result.graphTrace.some((edge) => edge.from === "Michael" && edge.type === "SENT_MESSAGE_TO" && edge.to === "toyesshh"), "personal graph trace missing");
+  assert(personal.result.graphTrace.some((edge) => edge.from === "Alex Rivera" && edge.type === "SENT_MESSAGE_TO" && edge.to === "toyesshh"), "personal graph trace missing");
 
   const work = await check("Remind me what my boss told me.");
   assert(work.route.intent === "work_memory_search", "work query did not route to work_memory_search");
-  assert(work.result.graphTrace.some((edge) => edge.from === "Andrey" && edge.type === "IS_BOSS_OF" && edge.to === "Michael"), "boss graph trace missing");
+  assert(work.result.graphTrace.some((edge) => edge.from === "Priya Shah" && edge.type === "IS_BOSS_OF" && edge.to === "Alex Rivera"), "boss graph trace missing");
   const workEvidence = work.result.evidenceCards;
-  assert(workEvidence.some(c => c.text.includes("Sofia")), "work evidence missing Sofia");
+  assert(workEvidence.some(c => c.text.includes("Nina")), "work evidence missing Nina");
   assert(workEvidence.some(c => c.text.includes("OAuth")), "work evidence missing OAuth");
   assert(workEvidence.some(c => c.text.includes("AskUserQuestions")), "work evidence missing AskUserQuestions");
 

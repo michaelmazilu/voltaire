@@ -1,10 +1,11 @@
 import { callMcpTool, getTableName } from "./butterbase";
 import { compactText } from "./normalize";
-import { USER_ID } from "./seed";
+import { allMemoryItems, isDemoMode, USER_ID } from "./seed";
 import type { MemoryItem, Source } from "./types";
 
 export async function butterbaseSearch(query: string, filters: { sources?: Source[] } = {}): Promise<MemoryItem[]> {
   const appId = process.env.NEXT_PUBLIC_BUTTERBASE_APP_ID;
+  if (isDemoMode()) return localDemoSearch(query, filters);
   if (!appId) return [];
 
   const results: MemoryItem[] = [];
@@ -73,4 +74,20 @@ export async function butterbaseSearch(query: string, filters: { sources?: Sourc
     .filter(({ score }) => score > 0)
     .sort((a, b) => b.score - a.score)
     .map(({ item }) => item);
+}
+
+function localDemoSearch(query: string, filters: { sources?: Source[] } = {}) {
+  const terms = compactText(query).split(" ").filter((term) => term.length > 2);
+  const candidates = allMemoryItems()
+    .filter((item) => !filters.sources || filters.sources.includes(item.source))
+    .map((item) => {
+      const haystack = compactText(`${item.title ?? ""} ${item.text} ${item.author ?? ""} ${item.participants?.join(" ") ?? ""}`);
+      return {
+        item,
+        score: terms.reduce((score, term) => score + (haystack.includes(term) ? 1 : 0), 0),
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+  const matches = candidates.filter(({ score }) => score > 0);
+  return (matches.length ? matches : candidates).map(({ item }) => item).slice(0, 10);
 }

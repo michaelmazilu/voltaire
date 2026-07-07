@@ -11,8 +11,11 @@ export async function exaSearch(query: string): Promise<EvidenceCard[]> {
   const apiKey = process.env.EXA_API_KEY;
   if (!apiKey) return [];
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 4000);
   const response = await fetch("https://api.exa.ai/search", {
     method: "POST",
+    signal: controller.signal,
     headers: {
       "content-type": "application/json",
       "x-api-key": apiKey,
@@ -22,8 +25,9 @@ export async function exaSearch(query: string): Promise<EvidenceCard[]> {
       numResults: 3,
       contents: { highlights: true },
     }),
-  });
-  if (!response.ok) return [];
+  }).catch(() => null);
+  clearTimeout(timeout);
+  if (!response?.ok) return [];
   const data = (await response.json()) as { results?: ExaResult[] };
   return (data.results ?? []).map((result, index) => ({
     id: `exa_${index}`,

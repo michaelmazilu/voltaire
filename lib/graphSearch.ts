@@ -1,10 +1,13 @@
 import { getNeo4jDriver } from "./neo4j";
+import { DEMO_USER_NAME, isDemoMode } from "./seed";
 import type { GraphTraceItem, QueryIntent } from "./types";
 
 export async function graphSearch(query: string, intent: QueryIntent, retries = 3): Promise<GraphTraceItem[]> {
+  if (isDemoMode()) return demoGraph(intent);
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     const driver = getNeo4jDriver();
-    if (!driver) return [];
+    if (!driver) return demoGraph(intent);
 
     const database = process.env.NEO4J_DATABASE;
     const session = driver.session(database ? { database } : undefined);
@@ -15,11 +18,11 @@ export async function graphSearch(query: string, intent: QueryIntent, retries = 
 
       if (intent === "personal_memory_search") {
         cypher = `
-          MATCH (p1:Person {name: "Michael"})-[r1:SENT_MESSAGE_TO]->(p2:Person)
+          MATCH (p1:Person {name: $userName})-[r1:SENT_MESSAGE_TO]->(p2:Person)
           MATCH (p1)-[r2:AUTHORED]->(m:Message)-[r3:MENTIONS]->(p2)
           RETURN p1.name AS from, type(r1) AS type, p2.name AS to
           UNION
-          MATCH (p1:Person {name: "Michael"})-[r2:AUTHORED]->(m:Message)
+          MATCH (p1:Person {name: $userName})-[r2:AUTHORED]->(m:Message)
           RETURN p1.name AS from, type(r2) AS type, "Instagram Message" AS to
           UNION
           MATCH (m:Message)-[r3:MENTIONS]->(p2:Person)
@@ -27,7 +30,7 @@ export async function graphSearch(query: string, intent: QueryIntent, retries = 
         `;
       } else if (intent === "work_memory_search") {
         cypher = `
-          MATCH (boss)-[r1:IS_BOSS_OF]->(me:Person {name: "Michael"})
+          MATCH (boss)-[r1:IS_BOSS_OF]->(me:Person {name: $userName})
           MATCH (boss)-[r2:SAID_IN_MEETING]->(meet:Meeting)
           MATCH (meet)-[r3:CONTAINS_ACTION_ITEM]->(task:Task)
           RETURN boss.name AS from, type(r1) AS type, me.name AS to
@@ -48,11 +51,12 @@ export async function graphSearch(query: string, intent: QueryIntent, retries = 
         `;
       } else {
         cypher = `
-          MATCH (p:Person {name: "Michael"})-[r:INTERACTED_WITH]->(s:Source)
+          MATCH (p:Person {name: $userName})-[r:INTERACTED_WITH]->(s:Source)
           RETURN p.name AS from, type(r) AS type, s.name AS to
         `;
       }
 
+      params = { userName: DEMO_USER_NAME };
       const res = await session.run(cypher, params);
       return res.records.map((rec: import("neo4j-driver").Record) => ({
         from: rec.get("from") as string,
@@ -62,7 +66,7 @@ export async function graphSearch(query: string, intent: QueryIntent, retries = 
     } catch (error: any) {
       console.error(`Neo4j graphSearch attempt ${attempt} failed:`, error.message);
       if (attempt === retries) {
-        return [];
+        return demoGraph(intent);
       }
       // wait 3 seconds before retrying
       await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -71,4 +75,33 @@ export async function graphSearch(query: string, intent: QueryIntent, retries = 
     }
   }
   return [];
+}
+
+function demoGraph(intent: QueryIntent): GraphTraceItem[] {
+  if (!isDemoMode()) return [];
+  if (intent === "personal_memory_search") {
+    return [
+      { from: DEMO_USER_NAME, type: "SENT_MESSAGE_TO", to: "toyesshh" },
+      { from: DEMO_USER_NAME, type: "AUTHORED", to: "Instagram Message" },
+      { from: "Message", type: "MENTIONS", to: "toyesshh" },
+    ];
+  }
+  if (intent === "work_memory_search") {
+    return [
+      { from: "Priya Shah", type: "IS_BOSS_OF", to: DEMO_USER_NAME },
+      { from: "Priya Shah", type: "SAID_IN_MEETING", to: "Morning Launch Review" },
+      { from: "Morning Launch Review", type: "CONTAINS_ACTION_ITEM", to: "Fix the OAuth callback issue before standup" },
+    ];
+  }
+  if (intent === "flight_search") {
+    return [
+      { from: "Flight", type: "FOUND_IN", to: "Fallback Flight Index" },
+      { from: "Fallback Flight Index", type: "SEARCH_RESULT_FOR", to: "Toronto to San Francisco cheap flight" },
+    ];
+  }
+  return [
+    { from: DEMO_USER_NAME, type: "INTERACTED_WITH", to: "Instagram" },
+    { from: DEMO_USER_NAME, type: "INTERACTED_WITH", to: "Google Meet" },
+    { from: DEMO_USER_NAME, type: "INTERACTED_WITH", to: "Exa" },
+  ];
 }

@@ -2,46 +2,46 @@
   {
     "id": "meet_001",
     "platform": "google_meet",
-    "meeting_title": "Morning Sync",
-    "participants": ["Michael", "Andrey", "Sofia"],
-    "speaker": "Andrey",
+    "meeting_title": "Morning Launch Review",
+    "participants": ["Alex Rivera", "Priya Shah", "Nina Patel"],
+    "speaker": "Priya Shah",
     "timestamp": "2026-07-07T09:12:00",
-    "text": "Michael, I need you to help Sofia get set up and make sure the OAuth callback issue is fixed before standup. Also prioritize the AskUserQuestions implementation for the action design chat agent."
+    "text": "Alex, I need you to help Nina Patel get set up with the demo workspace and make sure the OAuth callback issue is fixed before standup. Also prioritize the AskUserQuestions implementation for the action design chat agent because reviewers need to see the agent ask clarifying questions before taking action."
   },
   {
     "id": "meet_002",
     "platform": "google_meet",
-    "meeting_title": "Requirements Review",
-    "participants": ["Michael", "Andrey", "Justin"],
-    "speaker": "Andrey",
+    "meeting_title": "Customer Evidence Review",
+    "participants": ["Alex Rivera", "Priya Shah", "Owen Brooks"],
+    "speaker": "Priya Shah",
     "timestamp": "2026-07-06T14:30:00",
-    "text": "Justin will handle requirements. The demo should focus on retrieval quality and cited answers."
+    "text": "Owen Brooks will handle requirements cleanup. Priya said the demo should focus on retrieval quality, cited answers, and showing exactly which source produced each claim."
   },
   {
     "id": "meet_003",
     "platform": "google_meet",
-    "meeting_title": "Design Handoff",
-    "participants": ["Michael", "Sofia"],
-    "speaker": "Sofia",
+    "meeting_title": "Integration Design Handoff",
+    "participants": ["Alex Rivera", "Nina Patel"],
+    "speaker": "Nina Patel",
     "timestamp": "2026-07-05T11:00:00",
-    "text": "Sofia is blocked on setup. We need a better graph trace so reviewers can see why Voltaire found each result."
+    "text": "Nina Patel is blocked on setup because the Google Meet transcript import needs a stable JSON shape. We need a better graph trace so reviewers can see why Voltaire found each result."
   },
   {
     "id": "meet_004",
     "platform": "google_meet",
     "meeting_title": "Travel Planning",
-    "participants": ["Michael", "Andrey"],
-    "speaker": "Michael",
+    "participants": ["Alex Rivera", "Priya Shah"],
+    "speaker": "Alex Rivera",
     "timestamp": "2026-07-04T16:45:00",
-    "text": "The flight search should have fallback data and should never claim it booked anything."
+    "text": "The flight search should use the seeded fallback flight index as source of truth, use Exa only for optional web context, and never claim it booked anything."
   },
   {
     "id": "meet_005",
     "platform": "google_meet",
-    "meeting_title": "Agent QA",
-    "participants": ["Michael", "Andrey", "Sofia"],
-    "speaker": "Andrey",
+    "meeting_title": "Agent QA Dry Run",
+    "participants": ["Alex Rivera", "Priya Shah", "Nina Patel"],
+    "speaker": "Priya Shah",
     "timestamp": "2026-07-03T10:15:00",
-    "text": "We need acceptance tests for the three primary demo queries and a fallback summary for broad questions."
+    "text": "We need acceptance tests for the three primary demo queries, a fallback summary for broad questions, and clear separation between demo seed data and production user data."
   }
 ]

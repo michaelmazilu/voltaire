@@ -23,7 +23,12 @@ type MeetingSeed = {
   text: string;
 };
 
-export const USER_ID = "michael";
+export const USER_ID = "demo_user";
+export const DEMO_USER_NAME = "Alex Rivera";
+
+export function isDemoMode() {
+  return process.env.VOLTAIRE_DATA_MODE !== "production";
+}
 
 export function instagramMemoryItems(): MemoryItem[] {
   return (instagramMessages as InstagramSeed[]).map((message) => ({
@@ -69,7 +74,7 @@ export function seedCounts() {
   const flightCount = flightResults().length;
   return {
     memoryItems: messages.length + meetings.length,
-    people: 4,
+    people: 5,
     messages: messages.length,
     meetings: meetings.length,
     tasks: 3,

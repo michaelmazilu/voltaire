@@ -1,4 +1,5 @@
 import { callMcpTool } from "./butterbase";
+import { isDemoMode } from "./seed";
 import type { MemoryItem, Source } from "./types";
 
 export async function butterbaseRagSearch(
@@ -6,6 +7,7 @@ export async function butterbaseRagSearch(
   filters: { sources?: Source[] } = {},
 ): Promise<MemoryItem[]> {
   const appId = process.env.NEXT_PUBLIC_BUTTERBASE_APP_ID;
+  if (isDemoMode()) return [];
   if (!appId) return [];
 
   try {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { insertButterbaseRows } from "../../../lib/butterbase";
 import { planQuery } from "../../../lib/planner";
 import { hybridSearch } from "../../../lib/retrieval";
+import { USER_ID } from "../../../lib/seed";
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as { query?: string; userId?: string };
@@ -13,11 +14,12 @@ export async function POST(request: Request) {
   await insertButterbaseRows("search_logs", [
     {
       id: crypto.randomUUID(),
-      user_id: body.userId,
+      user_id: body.userId ?? USER_ID,
       query,
       intent: route.intent,
       sources_searched: route.sources,
       results_count: result.evidenceCards.length + (result.flights?.length ?? 0),
+      created_at: new Date().toISOString(),
     },
   ]).catch(() => null);
 

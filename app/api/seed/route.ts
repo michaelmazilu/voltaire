@@ -18,6 +18,8 @@ export async function POST() {
 
   const instagramTable = getTableName(USER_ID, "instagram");
   const googleMeetTable = getTableName(USER_ID, "google_meet");
+  const seedRunId = "ing_demo_seed";
+  const seededAt = "2026-07-07T12:00:00Z";
 
   try {
     console.log(`Applying Butterbase schema for tables: ${instagramTable}, ${googleMeetTable}...`);
@@ -30,21 +32,33 @@ export async function POST() {
           [instagramTable]: {
             columns: {
               id: { type: "text", primaryKey: true },
+              user_id: { type: "text" },
+              ingestion_id: { type: "text" },
+              source_item_id: { type: "text" },
               conversation_id: { type: "text" },
               sender: { type: "text" },
               recipient: { type: "text" },
               timestamp: { type: "timestamptz" },
-              text: { type: "text" }
+              text: { type: "text" },
+              metadata: { type: "text" },
+              created_at: { type: "timestamptz" }
             }
           },
           [googleMeetTable]: {
             columns: {
               id: { type: "text", primaryKey: true },
+              user_id: { type: "text" },
+              ingestion_id: { type: "text" },
+              source_item_id: { type: "text" },
               meeting_title: { type: "text" },
               participants: { type: "text[]" },
               speaker: { type: "text" },
               timestamp: { type: "timestamptz" },
-              text: { type: "text" }
+              text: { type: "text" },
+              meet_url: { type: "text" },
+              calendar_event_id: { type: "text" },
+              metadata: { type: "text" },
+              created_at: { type: "timestamptz" }
             }
           },
           flight_results: {
@@ -61,10 +75,24 @@ export async function POST() {
               url: { type: "text" }
             }
           },
+          ingestion_runs: {
+            columns: {
+              id: { type: "text", primaryKey: true },
+              user_id: { type: "text" },
+              source: { type: "text" },
+              status: { type: "text" },
+              item_count: { type: "integer" },
+              started_at: { type: "timestamptz" },
+              completed_at: { type: "timestamptz" },
+              metadata: { type: "text" }
+            }
+          },
           source_connections: {
             columns: {
               id: { type: "text", primaryKey: true },
               user_id: { type: "text" },
+              ingestion_id: { type: "text" },
+              source_item_id: { type: "text" },
               source: { type: "text" },
               status: { type: "text" },
               last_synced_at: { type: "timestamptz" },
@@ -108,7 +136,8 @@ export async function POST() {
               participants: { type: "text[]" },
               timestamp: { type: "timestamptz" },
               url: { type: "text" },
-              metadata: { type: "text" }
+              metadata: { type: "text" },
+              created_at: { type: "timestamptz" }
             }
           }
         },
@@ -117,12 +146,36 @@ export async function POST() {
     });
 
     console.log("Seeding Butterbase tables...");
+    await callMcpTool("seed_database", {
+      app_id: appId,
+      table: "ingestion_runs",
+      rows: [
+        {
+          id: seedRunId,
+          user_id: USER_ID,
+          source: "demo_seed",
+          status: "completed",
+          item_count: instagramMessages.length + meetingNotes.length + flights.length,
+          started_at: seededAt,
+          completed_at: seededAt,
+          metadata: JSON.stringify({ mode: "demo", tables: [instagramTable, googleMeetTable, "flight_results"] })
+        }
+      ]
+    });
+
     // 2. Insert data into tables
     if (instagramMessages.length > 0) {
       await callMcpTool("seed_database", {
         app_id: appId,
         table: instagramTable,
-        rows: instagramMessages
+        rows: instagramMessages.map((message) => ({
+          ...message,
+          user_id: USER_ID,
+          ingestion_id: seedRunId,
+          source_item_id: message.id,
+          metadata: JSON.stringify({ mode: "demo", platform: "instagram" }),
+          created_at: seededAt
+        }))
       });
     }
 
@@ -130,7 +183,15 @@ export async function POST() {
       await callMcpTool("seed_database", {
         app_id: appId,
         table: googleMeetTable,
-        rows: meetingNotes
+        rows: meetingNotes.map((meeting) => ({
+          ...meeting,
+          user_id: USER_ID,
+          ingestion_id: seedRunId,
+          source_item_id: meeting.id,
+          calendar_event_id: meeting.id,
+          metadata: JSON.stringify({ mode: "demo", platform: "google_meet" }),
+          created_at: seededAt
+        }))
       });
     }
 
@@ -142,13 +203,65 @@ export async function POST() {
       });
     }
 
+    await callMcpTool("seed_database", {
+      app_id: appId,
+      table: "memory_items",
+      rows: [
+        ...instagramMessages.map((message) => ({
+          id: message.id,
+          user_id: USER_ID,
+          ingestion_id: seedRunId,
+          source_item_id: message.id,
+          source: "instagram",
+          source_type: "message",
+          title: `Instagram DM with ${message.recipient}`,
+          text: message.text,
+          author: message.sender,
+          participants: [message.sender, message.recipient],
+          timestamp: message.timestamp,
+          metadata: JSON.stringify({ mode: "demo", platform: "instagram", conversation_id: message.conversation_id }),
+          created_at: seededAt
+        })),
+        ...meetingNotes.map((meeting) => ({
+          id: meeting.id,
+          user_id: USER_ID,
+          ingestion_id: seedRunId,
+          source_item_id: meeting.id,
+          source: "google_meet",
+          source_type: "meeting_note",
+          title: meeting.meeting_title,
+          text: meeting.text,
+          author: meeting.speaker,
+          participants: meeting.participants,
+          timestamp: meeting.timestamp,
+          metadata: JSON.stringify({ mode: "demo", platform: "google_meet" }),
+          created_at: seededAt
+        })),
+        ...flights.map((flight) => ({
+          id: flight.id,
+          user_id: USER_ID,
+          ingestion_id: seedRunId,
+          source_item_id: flight.id,
+          source: "fallback",
+          source_type: "flight_result",
+          title: `${flight.airline} ${flight.origin} to ${flight.destination}`,
+          text: `$${flight.price}, ${flight.layovers} layovers, ${flight.departure_time} to ${flight.arrival_time}`,
+          timestamp: flight.date,
+          url: flight.url,
+          metadata: JSON.stringify({ mode: "demo", ...flight }),
+          created_at: seededAt
+        }))
+      ]
+    });
+
     console.log("Seeding additional source_connections, people, and tasks tables...");
     await callMcpTool("seed_database", {
       app_id: appId,
       table: "source_connections",
       rows: [
-        { id: "sc_001", user_id: USER_ID, source: "instagram", status: "connected", last_synced_at: "2026-07-07T12:00:00Z", metadata: "{}" },
-        { id: "sc_002", user_id: USER_ID, source: "google_meet", status: "connected", last_synced_at: "2026-07-07T12:00:00Z", metadata: "{}" }
+        { id: "sc_demo_001", user_id: USER_ID, source: "instagram", status: "demo_connected", last_synced_at: "2026-07-07T12:00:00Z", metadata: "{\"mode\":\"demo\"}" },
+        { id: "sc_demo_002", user_id: USER_ID, source: "google_meet", status: "demo_connected", last_synced_at: "2026-07-07T12:00:00Z", metadata: "{\"mode\":\"demo\"}" },
+        { id: "sc_demo_003", user_id: USER_ID, source: "exa", status: "demo_connected", last_synced_at: "2026-07-07T12:00:00Z", metadata: "{\"mode\":\"supplementary\"}" }
       ]
     });
 
@@ -156,9 +269,10 @@ export async function POST() {
       app_id: appId,
       table: "people",
       rows: [
-        { id: "p_001", name: "Andrey", relationship: "boss" },
-        { id: "p_002", name: "toyesshh", relationship: "instagram_contact" },
-        { id: "p_003", name: "Sofia", relationship: "teammate" }
+        { id: "p_demo_001", name: "Alex Rivera", relationship: "demo_user" },
+        { id: "p_demo_002", name: "Priya Shah", relationship: "boss" },
+        { id: "p_demo_003", name: "toyesshh", relationship: "instagram_contact" },
+        { id: "p_demo_004", name: "Nina Patel", relationship: "teammate" }
       ]
     });
 
@@ -166,9 +280,9 @@ export async function POST() {
       app_id: appId,
       table: "tasks",
       rows: [
-        { id: "t_001", title: "Help Sofia get set up", status: "pending" },
-        { id: "t_002", title: "Fix the OAuth callback issue before standup", status: "pending" },
-        { id: "t_003", title: "Prioritize AskUserQuestions", status: "pending" }
+        { id: "t_demo_001", title: "Help Nina get set up", status: "pending" },
+        { id: "t_demo_002", title: "Fix the OAuth callback issue before standup", status: "pending" },
+        { id: "t_demo_003", title: "Prioritize AskUserQuestions", status: "pending" }
       ]
     });
 

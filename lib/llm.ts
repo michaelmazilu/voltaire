@@ -1,28 +1,55 @@
+import { rocketrideCompleteText } from "./rocketride";
+
 type LlmMessage = {
   role: "system" | "user";
   content: string;
 };
 
 export async function completeText(messages: LlmMessage[], json = false) {
+  const rocketride = await rocketrideCompleteText(messages, json);
+  if (rocketride) return rocketride;
+  if (process.env.BASETEN_API_KEY) return baseten(messages, json);
   if (process.env.OPENAI_API_KEY) return openai(messages, json);
+  if (process.env.MISTRAL_API_KEY) return mistral(messages);
   if (process.env.ANTHROPIC_API_KEY) return anthropic(messages);
   if (process.env.GEMINI_API_KEY) return gemini(messages);
   return "";
 }
 
+async function baseten(messages: LlmMessage[], json: boolean) {
+  return chatCompletions(process.env.BASETEN_BASE_URL ?? "https://inference.baseten.co/v1", process.env.BASETEN_API_KEY ?? "", {
+    model: process.env.BASETEN_MODEL ?? "zai-org/GLM-5.2",
+    temperature: 0,
+    ...(json ? { response_format: { type: "json_object" } } : {}),
+    messages,
+  });
+}
+
 async function openai(messages: LlmMessage[], json: boolean) {
-  const response = await boundedFetch("https://api.openai.com/v1/chat/completions", {
+  return chatCompletions("https://api.openai.com/v1", process.env.OPENAI_API_KEY ?? "", {
+    model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+    temperature: 0,
+    ...(json ? { response_format: { type: "json_object" } } : {}),
+    messages,
+  });
+}
+
+async function mistral(messages: LlmMessage[]) {
+  return chatCompletions("https://api.mistral.ai/v1", process.env.MISTRAL_API_KEY ?? "", {
+    model: process.env.MISTRAL_MODEL ?? "mistral-small-latest",
+    temperature: 0,
+    messages,
+  });
+}
+
+async function chatCompletions(baseUrl: string, apiKey: string, body: Record<string, unknown>) {
+  const response = await boundedFetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
     method: "POST",
     headers: {
-      authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      authorization: `Bearer ${apiKey}`,
       "content-type": "application/json",
     },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-      temperature: 0,
-      ...(json ? { response_format: { type: "json_object" } } : {}),
-      messages,
-    }),
+    body: JSON.stringify(body),
   });
   if (!response?.ok) return "";
   const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };

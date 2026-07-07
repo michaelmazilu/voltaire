@@ -15,7 +15,7 @@ export function AnswerPanel({ result }: { result: SearchResponse }) {
     <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="space-y-5">
         <div className="rounded-lg border border-line bg-white p-4 text-sm leading-6 text-neutral-500">
-          Evidence disclosure: no seed data is bundled. Results only appear when a connected tool or imported source returns evidence.
+          Evidence disclosure: demo mode uses fictional seeded data under a demo user. Production mode uses imported or connected source data only.
         </div>
         <div className="rounded-lg border border-line bg-panel p-5 shadow-glow">
           <div className="mb-3 text-xs uppercase tracking-wide text-neutral-400">{result.intent}</div>
