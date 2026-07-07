@@ -1,4 +1,4 @@
-import { getNeo4jDriver } from "./neo4j";
+import { getNeo4jDriver, closeNeo4jDriver } from "./neo4j";
 import { flightResults } from "./seed";
 
 export async function seedGraph() {
@@ -7,7 +7,6 @@ export async function seedGraph() {
 
   const database = process.env.NEO4J_DATABASE;
   const session = driver.session(database ? { database } : undefined);
-
   try {
     await session.executeWrite((tx) =>
       tx.run(
@@ -66,6 +65,6 @@ export async function seedGraph() {
     return { nodes: 15, relationships: 18, skipped: false };
   } finally {
     await session.close();
-    await driver.close();
+    await closeNeo4jDriver();
   }
 }
