@@ -70,14 +70,17 @@ function flightFallbackSearch(query: string): FlightResult[] {
 }
 
 async function personalEvidence(query: string): Promise<EvidenceCard[]> {
-  const items = await butterbaseSearch(query, { sources: ["instagram"] });
-  return items.map((item) => toEvidenceCard(item));
+  const structured = await butterbaseSearch(query, { sources: ["instagram"] });
+  const rag = await butterbaseRagSearch(query, { sources: ["instagram"] });
+  return dedupe([...structured, ...rag].map((item) => toEvidenceCard(item)));
 }
 
 async function workEvidence(query: string): Promise<EvidenceCard[]> {
-  const items = await butterbaseSearch(query, { sources: ["google_meet"] });
-  return items.map((item) => toEvidenceCard(item));
+  const structured = await butterbaseSearch(query, { sources: ["google_meet"] });
+  const rag = await butterbaseRagSearch(query, { sources: ["google_meet"] });
+  return dedupe([...structured, ...rag].map((item) => toEvidenceCard(item)));
 }
+
 
 
 function flightEvidence(flights: FlightResult[]): EvidenceCard[] {
