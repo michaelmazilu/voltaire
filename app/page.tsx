@@ -8,12 +8,6 @@ import { VoltaireMark } from "../components/VoltaireMark";
 import type { SearchResponse } from "../lib/types";
 
 
-const sources = [
-  ["Butterbase", "data + RAG"],
-  ["Neo4j", "relationship graph"],
-  ["Exa", "web context"],
-  ["LLM", "planner + evaluator"],
-];
 
 export default function Home() {
   const [result, setResult] = useState<SearchResponse | null>(null);
@@ -129,22 +123,12 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="sources" className="grid border-b border-[#e0dedb] bg-[#FBFAF9] md:grid-cols-4">
-          {sources.map(([name, detail]) => (
-            <div key={name} className="border-b border-r border-[#e0dedb] p-6 md:border-b-0">
-              <div className="mb-10 h-1 w-24 bg-[#37322F]" />
-              <h3 className="text-sm font-semibold text-[#49423D]">{name}</h3>
-              <p className="mt-2 text-sm font-medium leading-6 text-[#605A57]">{detail}</p>
-            </div>
-          ))}
-        </section>
 
         <section id="search" className="px-4 py-12 sm:px-8">
           <div className="mx-auto max-w-[960px]">
             <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-[#827C77]">Try the agent</div>
-                <h2 className="mt-2 font-serif text-4xl font-normal text-[#37322F]">Ask Voltaire</h2>
+                <h2 className="font-serif text-4xl font-normal text-[#37322F]">Ask Voltaire</h2>
               </div>
               <p className="max-w-md text-sm font-medium leading-6 text-[#605A57]">
                 It will plan sources first. If nothing is connected, it returns no evidence instead of making things up.
