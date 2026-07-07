@@ -23,7 +23,7 @@ export async function butterbaseRagSearch(
       source: (chunk.metadata?.source || "fallback") as Source,
       sourceType: "meeting_note",
       title: "RAG Context Match",
-      text: chunk.text,
+      text: chunk.content,
       metadata: chunk.metadata || {},
     }));
   } catch (error) {
