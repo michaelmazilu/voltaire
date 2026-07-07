@@ -1,0 +1,3 @@
+event: message
+data: {"result":{"content":[{"type":"text","text":"No documentation section matched \"rocketride\".\n\nValid topics: overview, mcp, rest, auth, storage, functions, frontend, ai, meetings, billing, platform, regions, schema, sdk, cli, realtime, rag, integrations, substrate.\nCall butterbase_docs again with one of these as { topic }."}]},"jsonrpc":"2.0","id":"1"}
+
