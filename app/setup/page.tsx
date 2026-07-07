@@ -1,4 +1,5 @@
 import { VoltaireMark } from "../../components/VoltaireMark";
+import { IntegrationConnectPanel } from "../../components/IntegrationConnectPanel";
 
 const envGroups = [
   {
@@ -33,6 +34,7 @@ export default function SetupPage() {
             Add these to `.env.local`, then restart the dev server. Set `VOLTAIRE_DATA_MODE=demo` for seeded demo data or `production` for real integrations. Voltaire does not collect Instagram passwords or session cookies.
           </p>
         </div>
+        <IntegrationConnectPanel />
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {envGroups.map((group) => (
             <section key={group.title} className="rounded-lg border border-[#e0dedb] bg-white p-6">
