@@ -1,25 +1,76 @@
 "use client";
 
-import { ArrowRight, Database, Network, Search } from "lucide-react";
+import { ArrowRight, Send, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { AnswerPanel } from "../components/AnswerPanel";
-import { SearchBar } from "../components/SearchBar";
 import { VoltaireMark } from "../components/VoltaireMark";
 import type { SearchResponse } from "../lib/types";
 
+type ChatMessage =
+  | {
+      id: string;
+      role: "user";
+      content: string;
+    }
+  | {
+      id: string;
+      role: "assistant";
+      result: SearchResponse;
+    };
+
 export default function Home() {
-  const [result, setResult] = useState<SearchResponse | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function runSearch(query: string) {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery || loading) return;
+
+    const messageId = crypto.randomUUID();
+    setMessages((current) => [
+      ...current,
+      {
+        id: messageId,
+        role: "user",
+        content: trimmedQuery,
+      },
+    ]);
+    setQuery("");
     setLoading(true);
+
     try {
       const response = await fetch("/api/search", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query: trimmedQuery }),
       });
-      setResult(await response.json());
+      const result = (await response.json()) as SearchResponse;
+      setMessages((current) => [
+        ...current,
+        {
+          id: `${messageId}-answer`,
+          role: "assistant",
+          result,
+        },
+      ]);
+    } catch {
+      setMessages((current) => [
+        ...current,
+        {
+          id: `${messageId}-error`,
+          role: "assistant",
+          result: {
+            query: trimmedQuery,
+            intent: "conversation",
+            answer: "I could not reach the search pipeline. Check the connected services and try again.",
+            evidenceCards: [],
+            graphTrace: [],
+            loadingTrace: ["Search request failed"],
+            sourcesSearched: [],
+          },
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -36,9 +87,7 @@ export default function Home() {
               <span className="font-serif text-xl italic leading-none text-[#2F3037]">Voltaire</span>
             </a>
             <div className="hidden items-center gap-5 text-[13px] font-medium text-[rgba(49,45,43,0.78)] sm:flex">
-              <a href="#product">Product</a>
-              <a href="#sources">Sources</a>
-              <a href="#search">Search</a>
+              <a href="#chat">Try it</a>
             </div>
             <a
               href="/setup"
@@ -55,7 +104,7 @@ export default function Home() {
             <div className="rounded-full border border-[rgba(55,50,47,0.12)] bg-white px-[14px] py-[6px] text-xs font-medium text-[#37322F] shadow-[0_0_0_4px_rgba(55,50,47,0.05)]">
               Universal AI search for your digital life
             </div>
-            <h1 className="max-w-[790px] font-serif text-[42px] font-normal leading-[1.05] tracking-[-0.02em] text-[#37322F] sm:text-[68px] lg:text-[84px]">
+            <h1 className="max-w-[790px] font-serif text-[42px] font-normal leading-[1.05] text-[#37322F] sm:text-[68px] lg:text-[84px]">
               Find anything you have interacted with.
             </h1>
             <p className="max-w-[600px] text-base font-medium leading-7 text-[rgba(55,50,47,0.78)] sm:text-lg">
@@ -63,91 +112,139 @@ export default function Home() {
             </p>
             <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
               <a
-                href="/setup"
+                href="#chat"
                 className="flex h-12 items-center gap-2 rounded-full bg-[#37322F] px-9 text-sm font-medium text-white shadow-[0_0_0_2.5px_rgba(255,255,255,0.08)_inset] transition hover:bg-[#2A2520]"
               >
-                Configure data <ArrowRight className="h-4 w-4" />
+                Ask Voltaire <ArrowRight className="h-4 w-4" />
               </a>
               <a
-                href="#search"
+                href="/setup"
                 className="flex h-12 items-center rounded-full border border-[rgba(55,50,47,0.15)] bg-white px-9 text-sm font-medium text-[#37322F] transition hover:bg-[#F0EEEC]"
               >
-                Start search
+                Configure sources
               </a>
-            </div>
-          </div>
-
-          <div id="product" className="relative z-10 mt-16 w-full max-w-[960px] rounded-[9px] bg-[#37322F] p-3 shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
-            <div className="rounded-[7px] border border-white/10 bg-gradient-to-br from-[#37322F] via-[#48433F] to-[#2F2A27] p-5 text-white">
-              <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-                <aside className="rounded-md border border-white/10 bg-white/8 p-4">
-                  <div className="mb-4 text-xs uppercase tracking-wide text-white/50">Tool plan</div>
-                  {[
-                    ["Planner", "choose intent"],
-                    ["Butterbase", "structured + RAG"],
-                    ["Neo4j", "relationship trace"],
-                    ["Evaluator", "answer with citations"],
-                  ].map(([name, detail]) => (
-                    <div key={name} className="mb-3 flex items-center justify-between rounded-md bg-white/8 px-3 py-2 text-sm">
-                      <span>{name}</span>
-                      <span className="text-white/45">{detail}</span>
-                    </div>
-                  ))}
-                </aside>
-                <div className="rounded-md border border-white/10 bg-[#F7F5F3] p-4 text-[#37322F]">
-                  <div className="mb-4 flex items-center justify-between border-b border-[#e0dedb] pb-3">
-                    <div>
-                      <div className="text-sm font-semibold">Answer workspace</div>
-                      <div className="text-xs font-medium text-[#827C77]">No evidence appears until a real source returns it.</div>
-                    </div>
-                    <div className="rounded-full bg-[#37322F] px-3 py-1 text-xs text-white">live pipeline</div>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {[
-                      [Search, "Ask", "Natural language query"],
-                      [Database, "Retrieve", "Butterbase + RAG"],
-                      [Network, "Prove", "Neo4j graph trace"],
-                    ].map(([Icon, title, detail]) => (
-                      <div key={String(title)} className="rounded-md border border-[#e0dedb] bg-white p-4">
-                        <Icon className="mb-8 h-5 w-5 text-[#37322F]" />
-                        <div className="text-sm font-semibold">{String(title)}</div>
-                        <div className="mt-1 text-xs font-medium text-[#827C77]">{String(detail)}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>
 
-
-        <section id="search" className="border-b border-[#e0dedb] px-4 py-12 sm:px-8">
+        <section id="chat" className="px-4 py-12 sm:px-8">
           <div className="mx-auto max-w-[960px]">
             <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-[#827C77]">Search</div>
-                <h2 className="mt-2 font-serif text-4xl font-normal text-[#37322F]">Ask Voltaire</h2>
+                <h2 className="font-serif text-4xl font-normal text-[#37322F]">Ask Voltaire</h2>
+                <p className="mt-2 max-w-[620px] text-sm font-medium leading-6 text-[#6F6964]">
+                  Talk to the agent in a running thread. Voltaire plans tools, searches connected sources, and replies with evidence.
+                </p>
               </div>
-              <a href="/setup" className="text-sm font-semibold text-[#37322F] underline underline-offset-4">
-                Configure data
-              </a>
             </div>
 
-            <SearchBar onSearch={runSearch} loading={loading} />
-
-            <div className="mt-8">
-              {loading ? (
-                <div className="rounded-lg border border-[#d8d8d2] bg-white p-6 text-sm font-medium text-[#605A57] shadow-glow">
-                  Searching connected sources...
+            <div className="overflow-hidden rounded-lg border border-[#d8d8d2] bg-white shadow-glow">
+              <div className="flex min-h-[520px] flex-col">
+                <div className="flex items-center justify-between border-b border-[#e6e2de] bg-[#FBFAF8] px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#37322F] text-white">
+                      <Sparkles className="h-4 w-4" aria-hidden />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-[#37322F]">Voltaire Agent</div>
+                      <div className="text-xs font-medium text-[#827C77]">
+                        {loading ? "Thinking through sources..." : "Ready for your next question"}
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    href="/setup"
+                    className="rounded-md border border-[#d8d3ce] px-3 py-2 text-xs font-semibold text-[#37322F] transition hover:bg-[#F0EEEC]"
+                  >
+                    Sources
+                  </a>
                 </div>
-              ) : result ? (
-                <AnswerPanel result={result} />
-              ) : null}
+
+                <div className="flex-1 space-y-5 bg-[#F7F5F3] px-4 py-5 sm:px-6">
+                  {messages.length === 0 ? (
+                    <div className="mx-auto flex min-h-[330px] max-w-[640px] flex-col items-center justify-center text-center">
+                      <VoltaireMark className="mb-5 h-10 w-10 text-[#37322F]" />
+                      <h3 className="font-serif text-3xl font-normal text-[#37322F]">What do you want to find?</h3>
+                      <div className="mt-6 grid w-full gap-3 text-left sm:grid-cols-3">
+                        {[
+                          "What did I say about Q3 hiring?",
+                          "Find my latest meeting notes with action items.",
+                          "What flights should I look at for next week?",
+                        ].map((prompt) => (
+                          <button
+                            key={prompt}
+                            type="button"
+                            onClick={() => runSearch(prompt)}
+                            className="rounded-md border border-[#ded9d4] bg-white p-3 text-left text-sm font-medium leading-5 text-[#605A57] transition hover:border-[#BEB7B0] hover:text-[#37322F]"
+                          >
+                            {prompt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    messages.map((message) =>
+                      message.role === "user" ? (
+                        <div key={message.id} className="flex justify-end">
+                          <div className="max-w-[78%] rounded-lg bg-[#37322F] px-4 py-3 text-sm font-medium leading-6 text-white">
+                            {message.content}
+                          </div>
+                        </div>
+                      ) : (
+                        <div key={message.id} className="max-w-[86%]">
+                          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase text-[#827C77]">
+                            <VoltaireMark className="h-4 w-4 text-[#37322F]" />
+                            Voltaire
+                          </div>
+                          <AnswerPanel result={message.result} />
+                        </div>
+                      ),
+                    )
+                  )}
+
+                  {loading ? (
+                    <div className="max-w-[86%] rounded-lg border border-[#d8d8d2] bg-white p-4 text-sm font-medium text-[#605A57] shadow-glow">
+                      Planning tools, checking connected sources, and evaluating evidence...
+                    </div>
+                  ) : null}
+                </div>
+
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    runSearch(query);
+                  }}
+                  className="border-t border-[#e6e2de] bg-white p-3"
+                >
+                  <div className="flex items-end gap-3 rounded-lg border border-[#d8d3ce] bg-[#FBFAF8] p-2 focus-within:border-[#37322F]">
+                    <textarea
+                      className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-2 py-3 text-base font-medium leading-6 text-[#37322F] outline-none placeholder:text-[#9B948E]"
+                      placeholder="Message Voltaire..."
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && !event.shiftKey) {
+                          event.preventDefault();
+                          runSearch(query);
+                        }
+                      }}
+                      aria-label="Message Voltaire"
+                      rows={1}
+                    />
+                    <button
+                      type="submit"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#37322F] text-white transition hover:bg-[#2A2520] disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={loading || !query.trim()}
+                      aria-label="Send message"
+                    >
+                      <Send className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </section>
-
       </div>
     </main>
   );
