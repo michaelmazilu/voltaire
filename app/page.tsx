@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { AnswerPanel } from "../components/AnswerPanel";
 import { SearchBar } from "../components/SearchBar";
