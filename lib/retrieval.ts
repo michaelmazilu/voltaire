@@ -69,34 +69,16 @@ function flightFallbackSearch(query: string): FlightResult[] {
   );
 }
 
-function personalEvidence(query: string): EvidenceCard[] {
-  const q = compactText(query);
-  const terms = new Set(q.split(" ").filter((term) => term.length > 2));
-  return instagramMemoryItems()
-    .map((item) => {
-      const text = compactText(`${item.text} ${item.participants?.join(" ") ?? ""}`);
-      const score = [...terms].reduce((total, term) => total + (text.includes(term) ? 1 : 0), 0);
-      return { item, score };
-    })
-    .filter(({ score }) => score > 0)
-    .sort((a, b) => b.score - a.score || Date.parse(b.item.timestamp ?? "") - Date.parse(a.item.timestamp ?? ""))
-    .map(({ item }) => toEvidenceCard(item));
+async function personalEvidence(query: string): Promise<EvidenceCard[]> {
+  const items = await butterbaseSearch(query, { sources: ["instagram"] });
+  return items.map((item) => toEvidenceCard(item));
 }
 
-function workEvidence(query: string): EvidenceCard[] {
-  const q = compactText(query);
-  const terms = new Set(q.split(" ").filter((term) => term.length > 2));
-  return meetingMemoryItems()
-    .map((item) => {
-      const text = compactText(`${item.text} ${item.title} ${item.author} ${item.participants?.join(" ") ?? ""}`);
-      const termScore = [...terms].reduce((total, term) => total + (text.includes(term) ? 1 : 0), 0);
-      const actionScore = /need you|make sure|prioritize|blocked|action/i.test(item.text) ? 3 : 0;
-      return { item, score: termScore + actionScore };
-    })
-    .filter(({ score }) => score > 0)
-    .sort((a, b) => b.score - a.score || Date.parse(b.item.timestamp ?? "") - Date.parse(a.item.timestamp ?? ""))
-    .map(({ item }) => toEvidenceCard(item));
+async function workEvidence(query: string): Promise<EvidenceCard[]> {
+  const items = await butterbaseSearch(query, { sources: ["google_meet"] });
+  return items.map((item) => toEvidenceCard(item));
 }
+
 
 function flightEvidence(flights: FlightResult[]): EvidenceCard[] {
   return flights.map((flight) => ({
@@ -143,7 +125,7 @@ export async function hybridSearch(query: string, intent: QueryIntent): Promise<
   }
 
   if (intent === "personal_memory_search") {
-    const evidenceCards = dedupe(personalEvidence(query));
+    const evidenceCards = dedupe(await personalEvidence(query));
     return {
       answer: await evaluateAnswer({ query, intent, evidenceCards }),
       evidenceCards,
@@ -153,7 +135,7 @@ export async function hybridSearch(query: string, intent: QueryIntent): Promise<
   }
 
   if (intent === "work_memory_search") {
-    const evidenceCards = dedupe(workEvidence(query));
+    const evidenceCards = dedupe(await workEvidence(query));
     return {
       answer: await evaluateAnswer({ query, intent, evidenceCards }),
       evidenceCards,
@@ -163,7 +145,7 @@ export async function hybridSearch(query: string, intent: QueryIntent): Promise<
   }
 
   const filters: { sources?: Source[] } = {};
-  const structured = butterbaseSearch(query, filters).map(toEvidenceCard);
+  const structured = (await butterbaseSearch(query, filters)).map(toEvidenceCard);
   const rag = (await butterbaseRagSearch(query, filters)).map(toEvidenceCard);
   const wantsFlights = /\bflight|ticket|fly|airport|travel|cheap\b/i.test(query);
   const flights = wantsFlights ? flightFallbackSearch(query) : [];
@@ -171,10 +153,10 @@ export async function hybridSearch(query: string, intent: QueryIntent): Promise<
   const evidenceCards = dedupe([
     ...structured,
     ...rag,
-    ...workEvidence(query),
-    ...personalEvidence(query),
-    ...(broadQuery ? workEvidence(query) : []),
-    ...(broadQuery ? personalEvidence(query) : []),
+    ...(await workEvidence(query)),
+    ...(await personalEvidence(query)),
+    ...(broadQuery ? (await workEvidence(query)) : []),
+    ...(broadQuery ? (await personalEvidence(query)) : []),
   ]);
   return {
     answer: await evaluateAnswer({ query, intent, evidenceCards, flights }),

@@ -3,6 +3,7 @@ import type { EvidenceCard } from "./types";
 type ExaResult = {
   title?: string;
   url?: string;
+  highlights?: string[];
   text?: string;
 };
 
@@ -16,7 +17,11 @@ export async function exaSearch(query: string): Promise<EvidenceCard[]> {
       "content-type": "application/json",
       "x-api-key": apiKey,
     },
-    body: JSON.stringify({ query, numResults: 3 }),
+    body: JSON.stringify({
+      query,
+      numResults: 3,
+      contents: { highlights: true },
+    }),
   });
   if (!response.ok) return [];
   const data = (await response.json()) as { results?: ExaResult[] };
@@ -25,7 +30,7 @@ export async function exaSearch(query: string): Promise<EvidenceCard[]> {
     source: "exa",
     sourceType: "web_result",
     title: result.title ?? "Exa result",
-    text: result.text ?? result.url ?? "",
+    text: result.highlights?.join("\n...\n") ?? result.text ?? result.url ?? "",
     url: result.url,
     metadata: { supplementary: true },
   }));

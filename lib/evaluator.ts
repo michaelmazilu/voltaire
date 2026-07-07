@@ -30,18 +30,31 @@ async function llmEvaluate({
   evidenceCards: EvidenceCard[];
   flights: FlightResult[];
 }) {
-  if (!process.env.OPENAI_API_KEY) return "";
+  const openAiKey = process.env.OPENAI_API_KEY;
+  const mistralKey = process.env.MISTRAL_API_KEY;
+
+  if (!openAiKey && !mistralKey) return "";
+
+  const isMistral = !openAiKey && Boolean(mistralKey);
+  const apiKey = isMistral ? mistralKey : openAiKey;
+  const endpoint = isMistral
+    ? "https://api.mistral.ai/v1/chat/completions"
+    : "https://api.openai.com/v1/chat/completions";
+  const model = isMistral
+    ? (process.env.MISTRAL_MODEL || "mistral-small-latest")
+    : (process.env.OPENAI_MODEL || "gpt-4o-mini");
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 4000);
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
-      authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      authorization: `Bearer ${apiKey}`,
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+      model,
       temperature: 0,
       messages: [
         {
