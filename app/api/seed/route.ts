@@ -20,8 +20,33 @@ export async function POST() {
   const googleMeetTable = getTableName(USER_ID, "google_meet");
   const seedRunId = "ing_demo_seed";
   const seededAt = "2026-07-07T12:00:00Z";
+  const demoTables = [
+    instagramTable,
+    googleMeetTable,
+    "flight_results",
+    "ingestion_runs",
+    "source_connections",
+    "search_logs",
+    "people",
+    "tasks",
+    "memory_items",
+    "flight_fallbacks",
+    "instagram_messages",
+    "meeting_notes",
+    "michael_instagram",
+    "michael_google_meet"
+  ];
 
   try {
+    await callMcpTool("manage_schema", {
+      app_id: appId,
+      action: "apply",
+      schema: {
+        tables: {},
+        _drop: demoTables
+      }
+    }).catch(() => null);
+
     console.log(`Applying Butterbase schema for tables: ${instagramTable}, ${googleMeetTable}...`);
     // 1. Create tables
     await callMcpTool("manage_schema", {
@@ -141,7 +166,7 @@ export async function POST() {
             }
           }
         },
-        _drop: ["flight_fallbacks", "instagram_messages", "meeting_notes", "michael_instagram", "michael_google_meet"]
+        _drop: demoTables
       }
     });
 
