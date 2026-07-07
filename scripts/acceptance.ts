@@ -21,9 +21,9 @@ async function main() {
   assert(ans.includes("238") && ans.includes("westjet"), "flight answer missing best cheap option");
   assert(!flight.result.answer.toLowerCase().includes("booked your flight"), "flight answer claims booking");
 
-  const personal = await check("Find that one time I told toyesshh he had a big butt.");
+  const personal = await check("Find my message to toyesshh asking about their schedule.");
   assert(personal.route.intent === "personal_memory_search", "personal query did not route to personal_memory_search");
-  assert(personal.result.evidenceCards[0].text === "toyesshh you have a big butt", "personal quote changed");
+  assert(personal.result.evidenceCards[0].text === "hey toyesshh what time are you free this week?", "personal quote changed");
   assert(personal.result.evidenceCards[0].metadata.sender === "Alex Rivera", "personal sender missing");
   assert(personal.result.evidenceCards[0].metadata.recipient === "toyesshh", "personal recipient missing");
   assert(personal.result.graphTrace.some((edge) => edge.from === "Alex Rivera" && edge.type === "SENT_MESSAGE_TO" && edge.to === "toyesshh"), "personal graph trace missing");

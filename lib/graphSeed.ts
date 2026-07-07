@@ -40,7 +40,7 @@ export async function seedGraph() {
         MERGE (m)-[:INTERACTED_WITH]->(gm)
         MERGE (m)-[:INTERACTED_WITH]->(exa)
         MERGE (msg:Message {id: "ig_001"})
-        SET msg.text = "toyesshh you have a big butt", msg.ingestion_id = "ing_demo_seed"
+        SET msg.text = "hey toyesshh what time are you free this week?", msg.ingestion_id = "ing_demo_seed"
         MERGE (m)-[:AUTHORED]->(msg)
         MERGE (msg)-[:MENTIONS]->(t)
         MERGE (msg)-[:FROM_SOURCE]->(ig)
