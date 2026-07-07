@@ -36,6 +36,15 @@ export async function POST() {
     "michael_instagram",
     "michael_google_meet"
   ];
+  const seedRows = async (table: string, rows: Record<string, any>[], chunkSize = 5) => {
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      await callMcpTool("seed_database", {
+        app_id: appId,
+        table,
+        rows: rows.slice(i, i + chunkSize)
+      });
+    }
+  };
 
   try {
     await callMcpTool("manage_schema", {
@@ -153,6 +162,8 @@ export async function POST() {
             columns: {
               id: { type: "text", primaryKey: true },
               user_id: { type: "text" },
+              ingestion_id: { type: "text" },
+              source_item_id: { type: "text" },
               source: { type: "text" },
               source_type: { type: "text" },
               title: { type: "text" },
@@ -171,10 +182,9 @@ export async function POST() {
     });
 
     console.log("Seeding Butterbase tables...");
-    await callMcpTool("seed_database", {
-      app_id: appId,
-      table: "ingestion_runs",
-      rows: [
+    await seedRows(
+      "ingestion_runs",
+      [
         {
           id: seedRunId,
           user_id: USER_ID,
@@ -185,15 +195,15 @@ export async function POST() {
           completed_at: seededAt,
           metadata: JSON.stringify({ mode: "demo", tables: [instagramTable, googleMeetTable, "flight_results"] })
         }
-      ]
-    });
+      ],
+      1
+    );
 
     // 2. Insert data into tables
     if (instagramMessages.length > 0) {
-      await callMcpTool("seed_database", {
-        app_id: appId,
-        table: instagramTable,
-        rows: instagramMessages.map((message) => ({
+      await seedRows(
+        instagramTable,
+        instagramMessages.map((message) => ({
           ...message,
           user_id: USER_ID,
           ingestion_id: seedRunId,
@@ -201,14 +211,13 @@ export async function POST() {
           metadata: JSON.stringify({ mode: "demo", platform: "instagram" }),
           created_at: seededAt
         }))
-      });
+      );
     }
 
     if (meetingNotes.length > 0) {
-      await callMcpTool("seed_database", {
-        app_id: appId,
-        table: googleMeetTable,
-        rows: meetingNotes.map((meeting) => ({
+      await seedRows(
+        googleMeetTable,
+        meetingNotes.map((meeting) => ({
           ...meeting,
           user_id: USER_ID,
           ingestion_id: seedRunId,
@@ -217,21 +226,14 @@ export async function POST() {
           metadata: JSON.stringify({ mode: "demo", platform: "google_meet" }),
           created_at: seededAt
         }))
-      });
+      );
     }
 
     if (flights.length > 0) {
-      await callMcpTool("seed_database", {
-        app_id: appId,
-        table: "flight_results",
-        rows: flights
-      });
+      await seedRows("flight_results", flights);
     }
 
-    await callMcpTool("seed_database", {
-      app_id: appId,
-      table: "memory_items",
-      rows: [
+    await seedRows("memory_items", [
         ...instagramMessages.map((message) => ({
           id: message.id,
           user_id: USER_ID,
@@ -276,40 +278,27 @@ export async function POST() {
           metadata: JSON.stringify({ mode: "demo", ...flight }),
           created_at: seededAt
         }))
-      ]
-    });
+      ]);
 
     console.log("Seeding additional source_connections, people, and tasks tables...");
-    await callMcpTool("seed_database", {
-      app_id: appId,
-      table: "source_connections",
-      rows: [
+    await seedRows("source_connections", [
         { id: "sc_demo_001", user_id: USER_ID, source: "instagram", status: "demo_connected", last_synced_at: "2026-07-07T12:00:00Z", metadata: "{\"mode\":\"demo\"}" },
         { id: "sc_demo_002", user_id: USER_ID, source: "google_meet", status: "demo_connected", last_synced_at: "2026-07-07T12:00:00Z", metadata: "{\"mode\":\"demo\"}" },
         { id: "sc_demo_003", user_id: USER_ID, source: "exa", status: "demo_connected", last_synced_at: "2026-07-07T12:00:00Z", metadata: "{\"mode\":\"supplementary\"}" }
-      ]
-    });
+      ]);
 
-    await callMcpTool("seed_database", {
-      app_id: appId,
-      table: "people",
-      rows: [
+    await seedRows("people", [
         { id: "p_demo_001", name: "Alex Rivera", relationship: "demo_user" },
         { id: "p_demo_002", name: "Priya Shah", relationship: "boss" },
         { id: "p_demo_003", name: "toyesshh", relationship: "instagram_contact" },
         { id: "p_demo_004", name: "Nina Patel", relationship: "teammate" }
-      ]
-    });
+      ]);
 
-    await callMcpTool("seed_database", {
-      app_id: appId,
-      table: "tasks",
-      rows: [
+    await seedRows("tasks", [
         { id: "t_demo_001", title: "Help Nina get set up", status: "pending" },
         { id: "t_demo_002", title: "Fix the OAuth callback issue before standup", status: "pending" },
         { id: "t_demo_003", title: "Prioritize AskUserQuestions", status: "pending" }
-      ]
-    });
+      ]);
 
     console.log("Setting up Butterbase RAG memories collection...");
     // 3. Delete old collection first to prevent duplicate entries
