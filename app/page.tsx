@@ -7,11 +7,6 @@ import { SearchBar } from "../components/SearchBar";
 import { VoltaireMark } from "../components/VoltaireMark";
 import type { SearchResponse } from "../lib/types";
 
-const examples = [
-  "Search my personal messages",
-  "Summarize what my manager asked me to do",
-  "Find my cheapest flight options",
-];
 
 const sources = [
   ["Butterbase", "data + RAG"],
@@ -157,17 +152,6 @@ export default function Home() {
             </div>
 
             <SearchBar onSearch={runSearch} loading={loading} />
-            <div className="mt-4 flex flex-wrap gap-2">
-              {examples.map((example) => (
-                <button
-                  key={example}
-                  onClick={() => runSearch(example)}
-                  className="rounded-full border border-[#d8d8d2] bg-white px-4 py-2 text-left text-sm font-medium text-[#605A57] transition hover:border-[#37322F] hover:text-[#37322F]"
-                >
-                  {example}
-                </button>
-              ))}
-            </div>
 
             <div className="mt-8">
               {loading ? (
