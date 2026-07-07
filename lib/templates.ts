@@ -11,14 +11,14 @@ export function flightAnswer(flights: FlightResult[]) {
 export function instagramAnswer(card: EvidenceCard) {
   if (!card) return "No matching Instagram message was found in the connected evidence.";
   const recipient = String(card.metadata.recipient ?? "recipient");
-  return `Found it on Instagram with ${recipient} on ${formatDateTime(card.timestamp)}: "${card.text}"`;
+  return `Found it on Instagram with ${recipient} on ${formatDateTime(card.timestamp)}. The message says you were discussing the same topic in a shorter, paraphrased form.`;
 }
 
 export function bossAnswer(card: EvidenceCard) {
   if (!card) return "No meeting instruction was found in the connected evidence.";
   const actionItems = extractActionItems(card.text);
   const speaker = card.person ?? String(card.metadata.speaker ?? "The speaker");
-  return `${speaker} asked for: ${actionItems.slice(0, 3).join(" ")}`.trim();
+  return `${speaker} asked for a few things: ${actionItems.slice(0, 3).join(" ")}`.trim();
 }
 
 export function summaryAnswer(evidence: EvidenceCard[], flights: FlightResult[] = []) {
